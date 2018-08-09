@@ -11,7 +11,7 @@ devtools::install_github("pachterlab/sleuth")
 ```
 ## INSTALLATION 
 ```
-git clone https://github.com/sequencing/NxTrim.git
+git clone https://github.com/kokyriakidis/RNASeq.git
 cd RNASeq
 ```
 ## PIPELINE - HOWTO
