@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N RNASeq_Kallisto
+#PBS -N RNASeq_Kallisto_${ERR}
 #PBS -q see
 #PBS -j oe
 #PBS -M email

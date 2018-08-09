@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N RNASeq_Sleuth
+#PBS -N RNASeq_Sleuth_${ERR}
 #PBS -q see
 #PBS -j oe
 #PBS -M email
