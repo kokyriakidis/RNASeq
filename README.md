@@ -110,7 +110,11 @@ eg. qsub -v ERR=SRR1804790 RNASeq_PrePro.sh
     .......
 
 ```
-#### 8) Run RNASeq_Kallisto.sh in cluster FOR EACH sample_id
+#### 8) Run RNASeq_Index.sh in cluster
+```
+qsub -v ERR=sample_id RNASeq_Index.sh
+```
+#### 9) Run RNASeq_Kallisto.sh in cluster FOR EACH sample_id
 ```
 qsub -v ERR=sample_id RNASeq_Kallisto.sh
 
@@ -122,7 +126,7 @@ eg. qsub -v ERR=SRR1804790 RNASeq_Kallisto.sh
 
 ```
 
-#### 9) Run RNASeq_Sleuth.sh in cluster FOR EACH sample_id
+#### 10) Run RNASeq_Sleuth.sh in cluster FOR EACH sample_id
 ```
 qsub -v ERR=sample_id RNASeq_Sleuth.sh
 
@@ -133,4 +137,4 @@ eg. qsub -v ERR=SRR1804790 RNASeq_Sleuth.sh
     .......
 
 ```
-#### 10) The analysis' results will be inside the Analysis directory 
+#### 11) The analysis' results will be inside the Analysis directory 
