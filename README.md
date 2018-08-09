@@ -112,7 +112,7 @@ eg. qsub -v ERR=SRR1804790 RNASeq_PrePro.sh
 ```
 #### 8) Run RNASeq_Index.sh in cluster
 ```
-qsub -v ERR=sample_id RNASeq_Index.sh
+qsub RNASeq_Index.sh
 ```
 #### 9) Run RNASeq_Kallisto.sh in cluster FOR EACH sample_id
 ```
