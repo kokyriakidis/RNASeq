@@ -2,7 +2,7 @@
 
 ## DEPENDENCIES
 ```
-# R packages that must be installed in Cluster #
+# R packages that must be installed prior in the Cluster #
 source("http://bioconductor.org/biocLite.R")
 biocLite("rhdf5")
 install.packages("devtools")
