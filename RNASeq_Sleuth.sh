@@ -15,9 +15,12 @@ module load R
 #library("devtools")
 #devtools::install_github("pachterlab/sleuth")
 
+cd $PBS_O_WORKDIR
+
 ### DEA analysis with with sleuth using kallisto output in R ###
 
 ##Load function script inside R
 source("./diff_exp_sleuth.R")
 
-diff_exp_sleuth <- function(condition1, condition2)
+##Change arguments according to metadata.txt condition column
+diff_exp_sleuth <- function("condition1", "condition2")
