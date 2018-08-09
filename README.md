@@ -59,9 +59,9 @@ path1, path2 ... pathn is the kallisto's output files directory for each sample.
 
 sample_id	condition	path
 SRR1804790	untreated   /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804790/
-SRR1804791	untreated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
-SRR1804792	treated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
-SRR1804793	treated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
+SRR1804791	untreated   /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
+SRR1804792	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
+SRR1804793	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
 
 #### 4) Edit RNASeq_PrePro.sh script's PBS parameters to your needs
