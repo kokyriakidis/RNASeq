@@ -5,3 +5,4 @@ SRR1804792	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
 SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 
 
+# Example metadata file. Change sample_ids, condition and sample_id's paths (where kallisto output is) accordingly. The file is TAB DELIMITED, BE CAREFUL! #
