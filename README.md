@@ -48,3 +48,67 @@ SRR1804791	Control	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
 SRR1804792	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
 SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
+
+#### 4) Edit RNASeq_PrePro.sh script's PBS parameters to your needs
+```
+#!/bin/bash
+#PBS -N PrePro_R_${ERR}
+#PBS -q see
+#PBS -j oe
+#PBS -M email
+#PBS -m bea
+#PBS -l nodes=1:ppn=40,walltime=10:00:00
+```
+#### 5) Edit RNASeq_Kallisto.sh script's PBS parameters to your needs
+```
+#!/bin/bash
+#PBS -N RNASeq_Analysis
+#PBS -q see
+#PBS -j oe
+#PBS -M email
+#PBS -m bea
+#PBS -l nodes=1:ppn=40,walltime=10:00:00
+```
+#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs
+```
+#!/bin/bash
+#PBS -N RNASeq_Sleuth
+#PBS -q see
+#PBS -j oe
+#PBS -M email
+#PBS -m bea
+#PBS -l nodes=1:ppn=40,walltime=10:00:00
+```
+#### 7) Run RNASeq_PrePro.sh in cluster FOR EACH sample_id
+```
+qsub -v ERR=sample_id RNASeq_PrePro.sh
+
+eg. qsub -v ERR=SRR1804790 RNASeq_PrePro.sh
+    qsub -v ERR=SRR1804791 RNASeq_PrePro.sh
+    qsub -v ERR=SRR1804792 RNASeq_PrePro.sh
+    qsub -v ERR=SRR1804793 RNASeq_PrePro.sh
+    .......
+
+```
+#### 8) Run RNASeq_Kallisto.sh in cluster FOR EACH sample_id
+```
+qsub -v ERR=sample_id RNASeq_Kallisto.sh
+
+eg. qsub -v ERR=SRR1804790 RNASeq_Kallisto.sh
+    qsub -v ERR=SRR1804791 RNASeq_Kallisto.sh
+    qsub -v ERR=SRR1804792 RNASeq_Kallisto.sh
+    qsub -v ERR=SRR1804793 RNASeq_Kallisto.sh
+    .......
+
+```
+#### 9) Run RNASeq_Sleuth.sh in cluster FOR EACH sample_id
+```
+qsub -v ERR=sample_id RNASeq_Sleuth.sh
+
+eg. qsub -v ERR=SRR1804790 RNASeq_Sleuth.sh
+    qsub -v ERR=SRR1804791 RNASeq_Sleuth.sh
+    qsub -v ERR=SRR1804792 RNASeq_Sleuth.sh
+    qsub -v ERR=SRR1804793 RNASeq_Sleuth.sh
+    .......
+
+```
