@@ -4,7 +4,7 @@ usage(){
 echo "
 BBMap
 Written by Brian Bushnell, from Dec. 2010 - present
-Last modified August 6, 2018
+Last modified July 11, 2018
 
 Description:  Fast and accurate splice-aware read aligner.
 Please read bbmap/docs/guides/BBMapGuide.txt for more information.
@@ -307,7 +307,6 @@ any problems, or post at: http://seqanswers.com/forums/showthread.php?t=41057
 "   
 }
 
-#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -366,7 +365,6 @@ bbmap() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
-		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz

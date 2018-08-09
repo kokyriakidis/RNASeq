@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified July 24, 2018
+Last modified June 20, 2018
 
 Description:  Error corrects reads and/or filters by depth, storing
 kmer counts in a count-min sketch (a Bloom filter variant).
@@ -70,7 +70,7 @@ requireboth=t   Require both reads in a pair to pass in order to go to out.
                 reads in the pair will go to outb.  When false, reads will
                 only go to outb if both fail.
 tossjunk=f      Remove reads or pairs with outermost kmer depth below 2.
-(Suggested params for huge metagenomes: mincount=2 hcf=0.4 tossjunk=t)
+(Suggested params for large metagenomes: mincount=2 hcf=0.4 tossjunk=t)
 
 Error correction parameters:
 ecc=t           Perform error correction.
@@ -98,7 +98,6 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
-#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

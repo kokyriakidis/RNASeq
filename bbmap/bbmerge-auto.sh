@@ -1,6 +1,6 @@
 #!/bin/bash
 
-usage(){
+function usage(){
 echo "
 bbmerge-auto.sh is a wrapper for BBMerge that attempts to use all available
 memory, instead of a fixed amount.  This is for use with the Tadpole options
@@ -12,7 +12,6 @@ For information about usage and parameters, please run bbmerge.sh.
 "
 }
 
-#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
