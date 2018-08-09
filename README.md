@@ -1,4 +1,4 @@
-# RNASeq
+# RNASeq Kallisto-Sleuth Pipeline
 
 ## DEPENDENCIES
 ```
