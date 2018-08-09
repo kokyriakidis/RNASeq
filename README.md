@@ -43,10 +43,10 @@ path1, path2 ... pathn is the kallisto's output files directory for each sample.
 #Example metadata.txt file
 
 sample_id	condition	path
-SRR1804790	Control	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804790/
-SRR1804791	Control	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
-SRR1804792	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
-SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
+SRR1804790	untreated   /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804790/
+SRR1804791	untreated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
+SRR1804792	treated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
+SRR1804793	treated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
 
 #### 4) Edit RNASeq_PrePro.sh script's PBS parameters to your needs
@@ -118,3 +118,4 @@ eg. qsub -v ERR=SRR1804790 RNASeq_Sleuth.sh
     .......
 
 ```
+#### 10) The analysis' results will be inside the Analysis directory 
