@@ -1,7 +1,0 @@
-sample_id	condition	path
-SRR1804790	Control	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804790/
-SRR1804791	Control	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804791/
-SRR1804792	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
-SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
-
-
