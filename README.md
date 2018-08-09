@@ -15,7 +15,7 @@ git clone https://github.com/kokyriakidis/RNASeq.git
 cd RNASeq
 ```
 ## PIPELINE - HOWTO
-#### 1) Put your RNASeq fastq files in FASTQ_FILES folder. RENAME THEM SO AS THE PREFIX OF THE FASTQ FILE IS THE SAMPLE_ID'S NAME
+#### 1) Put your RNA-Seq fastq files in FASTQ_FILES folder. RENAME THEM SO AS THE PREFIX OF THE FASTQ FILE IS THE SAMPLE_ID'S NAME
 
 ```
 eg. FASTQ_FILES/SRR1804790_1.fastq.gz if the sample_id name is SRR1804790
