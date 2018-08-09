@@ -69,7 +69,7 @@ SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 #PBS -m bea
 #PBS -l nodes=1:ppn=40,walltime=10:00:00
 ```
-#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs
+#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs AND SPECIFY IN THE diff_exp_sleuth SCRIPT THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt FILE
 ```
 #!/bin/bash
 #PBS -N RNASeq_Sleuth
@@ -78,6 +78,11 @@ SRR1804793	SOX15	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 #PBS -M email
 #PBS -m bea
 #PBS -l nodes=1:ppn=40,walltime=10:00:00
+
+diff_exp_sleuth <- function("condition1", "condition2") 
+
+# eg. diff_exp_sleuth <- function("untreated","treated") 
+
 ```
 #### 7) Run RNASeq_PrePro.sh in cluster FOR EACH sample_id
 ```
@@ -101,6 +106,7 @@ eg. qsub -v ERR=SRR1804790 RNASeq_Kallisto.sh
     .......
 
 ```
+
 #### 9) Run RNASeq_Sleuth.sh in cluster FOR EACH sample_id
 ```
 qsub -v ERR=sample_id RNASeq_Sleuth.sh
