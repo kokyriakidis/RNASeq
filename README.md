@@ -1,4 +1,4 @@
-# RNASeq Kallisto-Sleuth Pipeline
+# RNASeq Kallisto-Sleuth Pipeline for PBS script submission in Cluster
 
 ## DEPENDENCIES
 ```
