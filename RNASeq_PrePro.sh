@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -N PrePro_N_${ERR}
+#PBS -N PrePro_${ERR}
 #PBS -q see
 #PBS -j oe
 #PBS -M email
