@@ -1,5 +1,15 @@
 # RNASeq
 
+## DEPENDENCIES
+```
+# R packages that must be installed in Cluster #
+source("http://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+install.packages("devtools")
+library("devtools")
+devtools::install_github("pachterlab/sleuth")
+```
+## PIPELINE - HOWTO
 #### 1) Put your RNASeq fastq files in FASTQ_FILES folder. RENAME THEM SO AS THE PREFIX OF THE FASTQ FILE IS THE SAMPLE_ID'S NAME
 
 ```
@@ -69,7 +79,7 @@ SRR1804793	treated	/mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 #PBS -m bea
 #PBS -l nodes=1:ppn=40,walltime=10:00:00
 ```
-#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs AND SPECIFY IN THE diff_exp_sleuth SCRIPT THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt FILE
+#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs AND SPECIFY IN THE diff_exp_sleuth FUNCTION THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt's CONDITION COLUMN
 ```
 #!/bin/bash
 #PBS -N RNASeq_Sleuth
