@@ -5,6 +5,17 @@ diff_exp_sleuth <- function(condition1, condition2) {
 
 library(sleuth)
 
+tx2gene <- function(){
+	mart <- biomaRt::useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
+	t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
+            	"external_gene_name"), mart = mart)
+	t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id,
+                 	ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
+	return(t2g)
+	}
+
+t2g <- tx2gene()
+	
 metadata <- read.delim("./Metadata/metadata.txt", comment.char="#")
 
 # re-format metadata to meet sleuth's required format
@@ -44,7 +55,7 @@ tab_metadata <- tab_metadata[, c('sample_id', 'condition', 'path')]
 names(tab_metadata)[1] <- 'sample'
 
 # (1) load the kallisto processed data and make a regression model using 'condition' as the dependent variable
-so <- sleuth_prep(tab_metadata, ~ condition)
+so <- sleuth_prep(tab_metadata, ~ condition, target_mapping = t2g)
 # (2) estimate parameters for the sleuth response error measurement (full) model as responding to the 'condition' factor
 so <- sleuth_fit(so)
 # (3) Create another model where the gene expression is not dependent on any factor.
