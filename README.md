@@ -8,6 +8,7 @@ biocLite("rhdf5")
 install.packages("devtools")
 library("devtools")
 devtools::install_github("pachterlab/sleuth")
+biocLite("biomaRt")
 ```
 ## INSTALLATION 
 ```
