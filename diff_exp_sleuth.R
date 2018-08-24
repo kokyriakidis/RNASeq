@@ -4,6 +4,7 @@
 diff_exp_sleuth <- function(condition1, condition2) {
 
 library(sleuth)
+library(biomaRt)
 
 tx2gene <- function(){
 	mart <- biomaRt::useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
