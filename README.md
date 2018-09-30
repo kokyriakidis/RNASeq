@@ -127,15 +127,9 @@ eg. qsub -v ERR=SRR1804790 RNASeq_Kallisto.sh
 
 ```
 
-#### 10) Run RNASeq_Sleuth.sh in cluster FOR EACH sample_id
+#### 10) Run RNASeq_Sleuth.sh
 ```
-qsub -v ERR=sample_id RNASeq_Sleuth.sh
-
-eg. qsub -v ERR=SRR1804790 RNASeq_Sleuth.sh
-    qsub -v ERR=SRR1804791 RNASeq_Sleuth.sh
-    qsub -v ERR=SRR1804792 RNASeq_Sleuth.sh
-    qsub -v ERR=SRR1804793 RNASeq_Sleuth.sh
-    .......
+qsub RNASeq_Sleuth.sh
 
 ```
 #### 11) The analysis' results will be inside the Analysis directory 
