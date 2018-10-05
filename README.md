@@ -57,7 +57,7 @@ SRR1804793	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 
 #### 4) Edit 4_Sleuth.sh AND SPECIFY IN THE ARG_SCRIPT.R THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt's CONDITION COLUMN
 ```
-Rscript ARG_SCRIPT.R **_"Control" "SOX15"_** &> $PBS_JOBID.log 
+Rscript ARG_SCRIPT.R "Control" "SOX15" &> $PBS_JOBID.log 
 
 DO NOT change "export PATH=$DENOVOFS/groups/denovo/anaconda2/bin:$PATH". You can ONLY change "cd $PBS_O_WORKDIR"
 
