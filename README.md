@@ -1,15 +1,5 @@
 # RNASeq Kallisto-Sleuth 
 
-## DEPENDENCIES
-```
-# R packages that must be installed prior in the Cluster #
-source("http://bioconductor.org/biocLite.R")
-biocLite("rhdf5")
-install.packages("devtools")
-library("devtools")
-devtools::install_github("pachterlab/sleuth")
-biocLite("biomaRt")
-```
 ## INSTALLATION 
 ```
 git clone https://github.com/kokyriakidis/RNASeq.git
