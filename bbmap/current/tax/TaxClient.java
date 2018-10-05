@@ -3,10 +3,12 @@ package tax;
 import java.io.PrintStream;
 import java.util.ArrayList;
 
+import server.PercentEncoding;
 import server.ServerTools;
 import shared.PreParser;
 import shared.Timer;
 import shared.Tools;
+import structures.ByteBuilder;
 
 public class TaxClient {
 	
@@ -126,7 +128,7 @@ public class TaxClient {
 	}
 	
 	public static int headerToTaxid(String header){
-		String s=sendAndRecieve("pt/name/"+header.replaceAll(" ", "%20"));
+		String s=sendAndRecieve("pt/name/"+header);
 		if(s==null || s.length()<1 || !Tools.isDigitOrSign(s.charAt(0))){return -1;}
 		return Integer.parseInt(s);
 	}
@@ -148,7 +150,7 @@ public class TaxClient {
 	}
 	
 	public static int[] headerToTaxidArray(String header){
-		String s=sendAndRecieve("pt/name/"+header);
+		String s=sendAndRecieve("pt/header/"+header);
 		return splitOutput(s);
 	}
 	
@@ -186,8 +188,9 @@ public class TaxClient {
 	private static final String sendAndRecieve(String message){
 		final String response;
 		if(message.length()<2000){//NERSC Apache limit is around 8kb
-			if(message.indexOf(' ')>=0){message=message.replaceAll(" ", "%20");}
-			response=ServerTools.sendAndReceive(null, path+message);
+			message=PercentEncoding.symbolToCode(message);
+			ByteBuilder bb=ServerTools.readPage(path+message);
+			response=(bb==null ? null : bb.toString());
 		}else{
 			response=ServerTools.sendAndReceive(message.getBytes(), path+"$POST");
 		}

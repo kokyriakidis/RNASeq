@@ -49,6 +49,22 @@ public final class Tools {
 		
 	}
 
+	public static void addFiles(String b, ArrayList<String> list){
+		if(b==null){list.clear();}
+		else{
+			if(new File(b).exists()){list.add(b);}
+			else{
+				for(String s : b.split(",")){list.add(s);}
+			}
+		}
+	}
+
+	public static void fill(int[] target, int[] source) {
+		for(int i=0; i<target.length; i++){
+			target[i]=source[i];
+		}
+	}
+
 	public static boolean isSorted(final int[] array) {
 		if(array==null || array.length<2){return true;}
 		for(int i=1; i<array.length; i++){
@@ -153,14 +169,14 @@ public final class Tools {
 		return sb.toString();
 	}
 	
-	public static String linesBytesOut(long linesIn, long bytesIn, long linesOut, long bytesOut, int pad){
+	public static String linesBytesOut(long linesIn, long bytesIn, long linesOut, long bytesOut, int pad, boolean percent){
 		double rpct=linesOut*100.0/linesIn;
 		double bpct=bytesOut*100.0/bytesIn;
 		String rstring=padKM(linesOut, pad);
 		String bstring=padKM(bytesOut, pad);
 		StringBuilder sb=new StringBuilder();
-		sb.append("Lines Out:          ").append(rstring).append(String.format(Locale.ROOT, " \t%.2f%%", rpct)).append('\n');
-		sb.append("Bytes Out:          ").append(bstring).append(String.format(Locale.ROOT, " \t%.2f%%", bpct));
+		sb.append("Lines Out:          ").append(rstring).append(percent ? String.format(Locale.ROOT, " \t%.2f%%", rpct) : "").append('\n');
+		sb.append("Bytes Out:          ").append(bstring).append(percent ? String.format(Locale.ROOT, " \t%.2f%%", bpct) : "");
 		return sb.toString();
 	}
 
@@ -1929,6 +1945,18 @@ public final class Tools {
 		}
 	}
 
+	public static void add(long[][] array, long[][] incr) {
+		for(int i=0; i<array.length; i++){
+			add(array[i], incr[i]);
+		}
+	}
+
+	public static void add(long[][][] array, long[][][] incr) {
+		for(int i=0; i<array.length; i++){
+			add(array[i], incr[i]);
+		}
+	}
+
 	public static long sum(byte[] array){
 		if(array==null){return 0;}
 		long x=0;
@@ -2794,6 +2822,10 @@ public final class Tools {
 		return(point<a ? a : point>b ? b : point);
 	}
 	
+	public static final int indexOf(byte[] array, char b){
+		return indexOf(array, (byte)b, 0);
+	}
+	
 	public static final int indexOf(byte[] array, byte b){
 		return indexOf(array, b, 0);
 	}
@@ -2943,6 +2975,19 @@ public final class Tools {
 		double sumdev2=0;
 		for(int i=0; i<numbers.length; i++){
 			long x=numbers[i];
+			double dev=avg-x;
+			sumdev2+=(dev*dev);
+		}
+		return Math.sqrt(sumdev2/numbers.length);
+	}
+	
+	public static final double standardDeviation(double[] numbers){
+		if(numbers==null || numbers.length<2){return 0;}
+		double sum=sum(numbers);
+		double avg=sum/(double)numbers.length;
+		double sumdev2=0;
+		for(int i=0; i<numbers.length; i++){
+			double x=numbers[i];
 			double dev=avg-x;
 			sumdev2+=(dev*dev);
 		}
@@ -3158,14 +3203,16 @@ public final class Tools {
 	
 	public static final double min(double x, double y){return x<y ? x : y;}
 	public static final double max(double x, double y){return x>y ? x : y;}
+	public static final double min(double x, double y, double z){return x<y ? (x<z ? x : z) : (y<z ? y : z);}
+	public static final double max(double x, double y, double z){return x>y ? (x>z ? x : z) : (y>z ? y : z);}
 	public static final double mid(double x, double y, double z){return x<y ? (x<z ? min(y, z) : x) : (y<z ? min(x, z) : y);}
 	
 	public static final float min(float x, float y){return x<y ? x : y;}
 	public static final float max(float x, float y){return x>y ? x : y;}
 	public static final float min(float x, float y, float z){return x<y ? (x<z ? x : z) : (y<z ? y : z);}
+	public static final float max(float x, float y, float z){return x>y ? (x>z ? x : z) : (y>z ? y : z);}
 	public static final float min(float x, float y, float z, float z2){return min(min(x, y), min(z, z2));}
 	public static final float max(float x, float y, float z, float z2){return max(max(x, y), max(z, z2));}
-	public static final float max(float x, float y, float z){return x>y ? (x>z ? x : z) : (y>z ? y : z);}
 	public static final float mid(float x, float y, float z){return x<y ? (x<z ? min(y, z) : x) : (y<z ? min(x, z) : y);}
 	
 	public static final int min(int[] array, int fromIndex, int toIndex){

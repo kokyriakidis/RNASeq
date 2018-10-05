@@ -429,7 +429,7 @@ public class Clumpify {
 			FASTQ.TEST_INTERLEAVED=FASTQ.FORCE_INTERLEAVED=false;
 			FileFormat dest=FileFormat.testOutput(out1, FileFormat.FASTQ, null, true, overwrite, false, false);
 			FileFormat dest2=FileFormat.testOutput(out2, FileFormat.FASTQ, null, true, overwrite, false, false);
-			SortByName.mergeAndDump(names, /*null, */dest, dest2, delete, useSharedHeader, outstream);
+			SortByName.mergeAndDump(names, /*null, */dest, dest2, delete, useSharedHeader, outstream, 150);
 		}
 		
 //		if(externalSort){

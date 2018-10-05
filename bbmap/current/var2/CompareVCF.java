@@ -192,7 +192,7 @@ public class CompareVCF {
 			for(VCFLine line : list){
 				variantLinesOut++;
 				line.toText(bb);
-				bb.append('\n');
+				bb.nl();
 				if(bb.length>=32000){
 					bsw.print(bb);
 					bb.clear();

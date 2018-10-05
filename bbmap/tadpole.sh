@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified July 16, 2018
+Last modified August 30, 2018
 
 Description:  Uses kmer counts to assemble contigs, extend sequences, 
 or error-correct reads.  Tadpole has no upper bound for kmer length,
@@ -82,6 +82,7 @@ branchlower=3       (blc) Max value of 2nd-greatest path depth to be considered 
 minextension=2      (mine) Do not keep contigs that did not extend at least this much.
 mincontig=auto      (minc) Do not write contigs shorter than this.
 mincoverage=1       (mincov) Do not write contigs with average coverage below this.
+maxcoverage=inf     (maxcov) Do not write contigs with average coverage above this.
 trimends=0          (trim) Trim contig ends by this much.  Trimming by K/2 
                     may yield more accurate genome size estimation.
 contigpasses=16     Build contigs with decreasing seed depth for this many iterations.
@@ -189,6 +190,7 @@ Java Parameters:
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

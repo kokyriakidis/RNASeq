@@ -135,7 +135,7 @@ public class LogLog {
 	public void hash(Read r){
 		if(r==null){return;}
 		if(r.length()>=k){hash(r.bases, r.quality);}
-		if(r.mateLength()>=k){hash(r.mate.bases, r.quality);}
+		if(r.mateLength()>=k){hash(r.mate.bases, r.mate.quality);}
 	}
 	
 	public void hash(byte[] bases, byte[] quals){
@@ -148,31 +148,54 @@ public class LogLog {
 		final int shift2=shift-2;
 		final long mask=~((-1L)<<shift);
 		int len=0;
-		float prob=1;
 		
 		long kmer=0, rkmer=0;
-		for(int i=0; i<bases.length; i++){
-			byte b=bases[i];
-			long x=Dedupe.baseToNumber[b];
-			long x2=Dedupe.baseToComplementNumber[b];
-			kmer=((kmer<<2)|x)&mask;
-			rkmer=(rkmer>>>2)|(x2<<shift2);
-			
-			if(minProb>0 && quals!=null){//Update probability
-				prob=prob*PROB_CORRECT[quals[i]];
-				if(len>k){
-					byte oldq=quals[i-k];
-					prob=prob*PROB_CORRECT_INVERSE[oldq];
+		
+		if(minProb>0 && quals!=null){//Debranched loop
+			assert(quals.length==bases.length) : quals.length+", "+bases.length;
+			float prob=1;
+			for(int i=0; i<bases.length; i++){
+				byte b=bases[i];
+				long x=Dedupe.baseToNumber[b];
+				long x2=Dedupe.baseToComplementNumber[b];
+				kmer=((kmer<<2)|x)&mask;
+				rkmer=(rkmer>>>2)|(x2<<shift2);
+				
+				{//Update probability
+					byte q=quals[i];
+					prob=prob*PROB_CORRECT[q];
+					if(len>k){
+						byte oldq=quals[i-k];
+						prob=prob*PROB_CORRECT_INVERSE[oldq];
+					}
+				}
+				if(AminoAcid.isFullyDefined(b)){
+					len++;
+				}else{
+					len=0;
+					prob=1;
+				}
+				if(len>=k && prob>=minProb){
+					add(Tools.max(kmer, rkmer));
 				}
 			}
-			if(AminoAcid.isFullyDefined(b)){
-				len++;
-			}else{
-				len=0;
-				prob=1;
-			}
-			if(len>=k && prob>=minProb){
-				add(Tools.max(kmer, rkmer));
+		}else{
+
+			for(int i=0; i<bases.length; i++){
+				byte b=bases[i];
+				long x=Dedupe.baseToNumber[b];
+				long x2=Dedupe.baseToComplementNumber[b];
+				kmer=((kmer<<2)|x)&mask;
+				rkmer=(rkmer>>>2)|(x2<<shift2);
+				
+				if(AminoAcid.isFullyDefined(b)){
+					len++;
+				}else{
+					len=0;
+				}
+				if(len>=k){
+					add(Tools.max(kmer, rkmer));
+				}
 			}
 		}
 	}
@@ -503,8 +526,8 @@ public class LogLog {
 		/*--------------------------------------------------------------*/
 	}
 	
-	public static final float[] PROB_CORRECT=Arrays.copyOf(align2.QualityTools.PROB_CORRECT, 127);
-	public static final float[] PROB_CORRECT_INVERSE=Arrays.copyOf(align2.QualityTools.PROB_CORRECT_INVERSE, 127);
+	public static final float[] PROB_CORRECT=Arrays.copyOf(align2.QualityTools.PROB_CORRECT, 128);
+	public static final float[] PROB_CORRECT_INVERSE=Arrays.copyOf(align2.QualityTools.PROB_CORRECT_INVERSE, 128);
 	
 	private static PrintStream outstream=System.err;
 	public static boolean verbose=false;

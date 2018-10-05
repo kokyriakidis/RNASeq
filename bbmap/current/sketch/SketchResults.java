@@ -6,11 +6,11 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
 import fileIO.TextStreamWriter;
+import json.JsonObject;
 import shared.Shared;
 import shared.Tools;
 import structures.ByteBuilder;
 import structures.IntHashMap;
-import structures.JsonObject;
 
 public class SketchResults extends SketchObject {
 	
@@ -97,13 +97,15 @@ public class SketchResults extends SketchObject {
 	 */
 	private int filterMeta(ArrayList<String> requiredMeta, ArrayList<String> bannedMeta, boolean requiredMetaAnd) {
 		if(refSketchList==null || refSketchList.isEmpty()){return 0;}
-		ArrayList<Sketch> refSketchList2=new ArrayList<Sketch>();
-		for(Sketch ref : refSketchList){
-			if(ref.passesMeta(requiredMeta, bannedMeta, requiredMetaAnd)){refSketchList2.add(ref);}
+		int removed=0;
+		for(int i=0; i<refSketchList.size(); i++){
+			Sketch ref=refSketchList.get(i);
+			if(!ref.passesMeta(requiredMeta, bannedMeta, requiredMetaAnd)){
+				refSketchList.set(i, null);
+				removed++;
+			}
 		}
-		if(refSketchList2.size()<refSketchList.size()){
-			refSketchList=refSketchList2;
-		}
+		if(removed>0){Tools.condenseStrict(refSketchList);}
 		return refSketchList.size();
 	}
 	

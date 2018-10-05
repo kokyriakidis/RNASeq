@@ -4,7 +4,7 @@ usage(){
 echo "
 BBMap
 Written by Brian Bushnell, from Dec. 2010 - present
-Last modified July 11, 2018
+Last modified September 18, 2018
 
 Description:  Fast and accurate splice-aware read aligner.
 Please read bbmap/docs/guides/BBMapGuide.txt for more information.
@@ -197,7 +197,7 @@ bloom=f                 Use a Bloom filter to ignore reads not sharing kmers
 bloomhashes=2           Number of hash functions.
 bloomminhits=3          Number of consecutive hits to be considered matched.
 bloomk=31               Bloom filter kmer length.
-bloomserial=f           Use the serialized Bloom filter for greater loading
+bloomserial=t           Use the serialized Bloom filter for greater loading
                         speed, if available.  If not, generate and write one.
 
 Post-Filtering Parameters:
@@ -307,6 +307,7 @@ any problems, or post at: http://seqanswers.com/forums/showthread.php?t=41057
 "   
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -365,11 +366,13 @@ bbmap() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMap build=1 overwrite=true fastareadlen=500 $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMap build=1 overwrite=true fastareadlen=500 $@"
+	local CMD="java $EA $z -cp $CP align2.BBMap build=1 overwrite=true fastareadlen=500 $@"
 	echo $CMD >&2
 	eval $CMD
 }

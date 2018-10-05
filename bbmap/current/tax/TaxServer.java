@@ -20,6 +20,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import dna.Data;
 import fileIO.ReadWrite;
+import json.JsonObject;
+import server.PercentEncoding;
 import server.ServerTools;
 import shared.KillSwitch;
 import shared.Parser;
@@ -40,7 +42,6 @@ import sketch.Whitelist;
 import stream.Read;
 import structures.ByteBuilder;
 import structures.IntList;
-import structures.JsonObject;
 
 /**
  * @author Shijie Yao, Brian Bushnell
@@ -831,7 +832,7 @@ public class TaxServer {
 		if(verbose2){System.err.println("Type: "+type);}
 		if(type2==NAME || type2==HEADER || type2==SILVAHEADER){
 			for(int i=0; i<names.length; i++){
-				names[i]=ServerTools.codeToSymbol(names[i]);
+				names[i]=PercentEncoding.codeToSymbol(names[i]);
 				if(type2==HEADER || type2==SILVAHEADER){
 					if(names[i].startsWith("@") || names[i].startsWith(">")){names[i]=names[i].substring(1);}
 				}

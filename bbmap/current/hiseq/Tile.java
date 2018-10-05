@@ -38,19 +38,7 @@ public class Tile {
 			if(ylist!=null){
 				for(MicroTile mt : ylist){
 					if(mt!=null){
-						bb.append(lane).append('\t');
-						bb.append(tile).append('\t');
-						bb.append(mt.x1).append('\t');
-						bb.append(mt.x2).append('\t');
-						bb.append(mt.y1).append('\t');
-						bb.append(mt.y2).append('\t');
-						bb.append(mt.qualityCount).append('\t');
-						
-						bb.append(mt.uniquePercent(), 3).append('\t');
-						bb.append(mt.averageQuality(), 3).append('\t');
-						bb.append(mt.percentErrorFree(), 3).append('\t');
-						bb.append(mt.discard);
-						bb.append('\n');
+						mt.toText(bb);
 					}
 				}
 			}

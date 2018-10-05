@@ -410,7 +410,7 @@ public class CoveragePileup {
 			for(SamLine sl : list){
 				if(tsw!=null){
 					sl.toBytes(bb);
-					bb.append('\n');
+					bb.nl();
 					if(bb.length>=16384){
 						tsw.print(bb);
 						bb.clear();

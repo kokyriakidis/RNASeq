@@ -238,15 +238,15 @@ public class TetramerFrequencies {
 	
 	void append(Line line, int[] counts, ByteBuilder bb){
 		bb.append(line.header);
-		bb.append('\t');
+		bb.tab();
 		bb.append(line.sidx+1);
 		bb.append('-');
 		bb.append(line.eidx);
 		for (int cnt: counts){
-			bb.append('\t');
+			bb.tab();
 			bb.append(cnt);
 		}
-		bb.append('\n');
+		bb.nl();
 	}
 	
 	// factor this out so we can work on reads

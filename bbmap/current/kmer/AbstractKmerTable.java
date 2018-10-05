@@ -279,21 +279,21 @@ public abstract class AbstractKmerTable {
 		if(FASTA_DUMP){
 			bb.append('>');
 			bb.append(count);
-			bb.append('\n');
+			bb.nl();
 			for(int i=k-1; i>=0; i--){
 				int x=(int)((kmer>>(2*i))&3);
 				bb.append(AminoAcid.numberToBase[x]);
 			}
 		}else if(NUMERIC_DUMP){
 			bb.append(Long.toHexString(kmer));
-			bb.append('\t');
+			bb.tab();
 			bb.append(count);
 		}else{
 			for(int i=k-1; i>=0; i--){
 				int x=(int)((kmer>>(2*i))&3);
 				bb.append(AminoAcid.numberToBase[x]);
 			}
-			bb.append('\t');
+			bb.tab();
 			bb.append(count);
 		}
 		return bb;
@@ -308,14 +308,14 @@ public abstract class AbstractKmerTable {
 				if(i>0){bb.append(',');}
 				bb.append(x);
 			}
-			bb.append('\n');
+			bb.nl();
 			for(int i=k-1; i>=0; i--){
 				int x=(int)((kmer>>(2*i))&3);
 				bb.append(AminoAcid.numberToBase[x]);
 			}
 		}else if(NUMERIC_DUMP){
 			bb.append(Long.toHexString(kmer));
-			bb.append('\t');
+			bb.tab();
 			for(int i=0; i<values.length; i++){
 				int x=values[i];
 				if(x==-1){break;}
@@ -327,7 +327,7 @@ public abstract class AbstractKmerTable {
 				int x=(int)((kmer>>(2*i))&3);
 				bb.append(AminoAcid.numberToBase[x]);
 			}
-			bb.append('\t');
+			bb.tab();
 			for(int i=0; i<values.length; i++){
 				int x=values[i];
 				if(x==-1){break;}
@@ -347,7 +347,7 @@ public abstract class AbstractKmerTable {
 	static void appendKmerText(long kmer, int count, int k, ByteBuilder bb){
 		bb.setLength(0);
 		toBytes(kmer, count, k, bb);
-		bb.append('\n');
+		bb.nl();
 	}
 	
 	

@@ -42,21 +42,21 @@ public final class Comparison extends SketchObject implements Comparable<Compari
 	/*--------------------------------------------------------------*/
 	
 	public void setFrom(CompareBuffer buffer){
-		hits=buffer.matches;
-		multiHits=buffer.multiMatches;
-		unique2=buffer.unique2;
-		unique3=buffer.unique3;
-		noHits=buffer.noHits;
+		hits=buffer.hits();
+		multiHits=buffer.multiHits();
+		unique2=buffer.unique2();
+		unique3=buffer.unique3();
+		noHits=buffer.noHits();
 
-		contamHits=buffer.contamHits;
-		contam2Hits=buffer.contam2Hits;
-		multiContamHits=buffer.multiContamHits;
+		contamHits=buffer.contamHits();
+		contam2Hits=buffer.contam2Hits();
+		multiContamHits=buffer.multiContamHits();
 		
-		refDivisor=buffer.refDivisor;
-		queryDivisor=buffer.queryDivisor;
+		refDivisor=buffer.refDivisor();
+		queryDivisor=buffer.queryDivisor();
 		
-		refSize=buffer.refSize;
-		querySize=buffer.querySize;
+		refSize=buffer.refSize();
+		querySize=buffer.querySize();
 
 		depth=buffer.depth();
 		depth2=buffer.depth2();
@@ -91,11 +91,13 @@ public final class Comparison extends SketchObject implements Comparable<Compari
 	}
 	
 	//WKID
+	public float wkid(){return idMinDivisor();}
 	public float idMinDivisor(){
 		return hits/(float)minDivisor();
 	}
 	
 	//KID
+	public float kid(){return idMaxDivisor();}
 	public float idMaxDivisor(){
 		return hits/(float)maxDivisor();
 	}
@@ -360,6 +362,28 @@ public final class Comparison extends SketchObject implements Comparable<Compari
 	private static final boolean sqrt=false;
 	
 	/*--------------------------------------------------------------*/
+	
+	int hits(){return hits;}
+	int multiHits(){return multiHits;}
+	int noHits(){return noHits;}
+	int unique2(){return unique2;}
+	int unique3(){return unique3;}
+
+	float depth(){return depth;}
+	float depth2(){return depth2;}
+	float score(){return score;}
+
+	int contamHits(){return contamHits;}
+	int contam2Hits(){return contam2Hits;}
+	int multiContamHits(){return multiContamHits;}
+	
+	int queryDivisor(){return queryDivisor;}
+	int refDivisor(){return refDivisor;}
+	
+	int querySize(){return querySize;}
+	int refSize(){return refSize;}
+	
+	/*--------------------------------------------------------------*/
 	/*----------------            Fields            ----------------*/
 	/*--------------------------------------------------------------*/
 	
@@ -368,24 +392,24 @@ public final class Comparison extends SketchObject implements Comparable<Compari
 	String taxName;
 	int taxID;
 	
-	int hits;
-	int multiHits;
-	int unique2;
-	int unique3;
-	int noHits;
+	private int hits;
+	private int multiHits;
+	private int unique2;
+	private int unique3;
+	private int noHits;
 
-	float depth;
-	float depth2;
-	float score;
+	private float depth;
+	private float depth2;
+	private float score;
 
-	int contamHits;
-	int contam2Hits;
-	int multiContamHits;
+	private int contamHits;
+	private int contam2Hits;
+	private int multiContamHits;
 	
-	int refDivisor;
-	int queryDivisor;
+	private int refDivisor;
+	private int queryDivisor;
 	
-	int refSize;
-	int querySize;
+	private int refSize;
+	private int querySize;
 	
 }

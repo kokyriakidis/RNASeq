@@ -3,8 +3,7 @@ package cluster;
 import java.io.File;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.concurrent.ThreadLocalRandom;
-
+import java.util.Random;
 import dna.Data;
 import fileIO.ByteFile;
 import fileIO.ByteFile1;
@@ -379,7 +378,7 @@ public class ReclusterByKmer {
 			clusterMode=clusterMode_;
 			cris=cris_;
 			
-			randy=(ambigModeT==AMBIG_MODE_RAND) ? ThreadLocalRandom.current() : null;
+			randy=(ambigModeT==AMBIG_MODE_RAND) ? Shared.threadLocalRandom() : null;
 		}
 		
 		@Override
@@ -517,7 +516,7 @@ public class ReclusterByKmer {
 		final int ambigModeT;
 		final ConcurrentReadInputStream cris;
 		
-		final ThreadLocalRandom randy;
+		final Random randy;
 		
 		long readsInT;
 		long basesInT;

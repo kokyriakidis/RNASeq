@@ -738,9 +738,10 @@ public class BBSplitter {
 							if(s2!=null){primarySet.addAll(s2);}
 						}
 						//	System.out.println(primarySet);
-						final int incrR=1+(r2==null ? 0 : 1);
-						final int incrB=r1.length()+(r1.mateLength());
+						final int incrR=r1.pairCount();
+						final int incrB=r1.pairLength();
 
+						int num=0;
 						for(String s : primarySet){
 							SetCount sc=setCountTable.get(s);
 							assert(sc!=null) : s;
@@ -749,14 +750,23 @@ public class BBSplitter {
 									//										System.out.println("Incrementing set "+sc);
 									sc.ambiguousReads+=incrR;
 									sc.ambiguousBases+=incrB;
+									if(num==0){
+										sc.assignedReads+=incrR;
+										sc.assignedBases+=incrB;
+									}
 								}
 							}else{
 								synchronized(sc){
 									//										System.out.println("Incrementing set "+sc);
 									sc.mappedReads+=incrR;
 									sc.mappedBases+=incrB;
+									if(num==0){
+										sc.assignedReads+=incrR;
+										sc.assignedBases+=incrB;
+									}
 								}
 							}
+							num++;
 						}
 					}
 					for(HashSet<String> set : sets){set.clear();}
@@ -787,6 +797,7 @@ public class BBSplitter {
 	}
 	
 	private static void addToScafCounts(Read r, int clearzone, HashSet<String> hss0){
+		if(r==null || !r.mapped()){return;}
 		assert((scafCountTable!=null)==TRACK_SCAF_STATS) : TRACK_SCAF_STATS;
 		if(scafCountTable!=null){
 			HashSet<String> set=getScaffolds(r, clearzone, hss0, false);
@@ -795,15 +806,23 @@ public class BBSplitter {
 				int incrRA=0;
 				int incrBM=0;
 				int incrBA=0;
-				if(r!=null){
-					if(r.ambiguous()){
-						incrRA+=1;
-						incrBA+=r.length();
-					}else{
-						incrRM+=1;
-						incrBM+=r.length();
+
+				int incrRS=1+(r.mate!=null && !r.mateMapped() ? 1 : 0);
+				int incrBS=r.length()+(r.mate!=null && !r.mateMapped() ? r.mateLength() : 0);
+				
+				
+				if(r.ambiguous()){
+					incrRA+=1;
+					incrBA+=r.length();
+					if(r.mate!=null && !r.mateMapped()){
+						incrRA++;
+						incrBA+=r.mateLength();
 					}
+				}else{
+					incrRM+=1;
+					incrBM+=r.length();
 				}
+				int num=0;
 				for(String s : set){
 					SetCount sc=scafCountTable.get(s);
 					assert(sc!=null) : "Can't find "+s+"\nin\n"+scafCountTable.keySet()+"\n";
@@ -816,10 +835,15 @@ public class BBSplitter {
 						sc.mappedBases+=incrBM;
 						sc.ambiguousReads+=incrRA;
 						sc.ambiguousBases+=incrBA;
+						if(num==0){
+							sc.assignedReads+=incrRS;
+							sc.assignedBases+=incrBS;
+						}
 					}
 //					System.out.println(sc);
 //					System.out.println();
 //					assert(false) : "\n"+incrRM+", "+incrRA+", "+incrBM+", "+incrBA+"\n"+set;
+					num++;
 				}
 				set.clear();
 			}
@@ -1174,8 +1198,10 @@ public class BBSplitter {
 		public final String name;
 		public long mappedReads;
 		public long ambiguousReads;
+		public long assignedReads;
 		public long mappedBases;
-		public long ambiguousBases;
+		public long ambiguousBases;	
+		public long assignedBases;
 		
 	}
 	
@@ -1192,20 +1218,23 @@ public class BBSplitter {
 		}
 		
 		if(header){
-			tsw.print("#name\t%unambiguousReads\tunambiguousMB\t%ambiguousReads\tambiguousMB\tunambiguousReads\tambiguousReads\n");
+			tsw.print("#name\t%unambiguousReads\tunambiguousMB\t%ambiguousReads\tambiguousMB\tunambiguousReads\tambiguousReads\tassignedReads\tassignedBases\n");
 		}
 		final StringBuilder sb=new StringBuilder(1024);
 		final double divR=100.0/(totalReads);
 		final double divB=1.0/1000000;
 		for(SetCount sc : list){
-			if(!nzo || sc.mappedReads>0 || sc.ambiguousReads>0){
+			if(!nzo || sc.mappedReads>0 || sc.ambiguousReads>0 || sc.assignedReads>0){
 				sb.append(sc.name).append('\t');
 				sb.append(String.format(Locale.ROOT, "%.5f\t", sc.mappedReads*divR));
-				sb.append(String.format(Locale.ROOT, "%.5f\t", sc.mappedBases*divB));
+				sb.append(String.format(Locale.ROOT, "%.6f\t", sc.mappedBases*divB));
 				sb.append(String.format(Locale.ROOT, "%.5f\t", sc.ambiguousReads*divR));
-				sb.append(String.format(Locale.ROOT, "%.5f\t", sc.ambiguousBases*divB));
+				sb.append(String.format(Locale.ROOT, "%.6f\t", sc.ambiguousBases*divB));
 				sb.append(sc.mappedReads).append('\t');
-				sb.append(sc.ambiguousReads).append('\n');
+				sb.append(sc.ambiguousReads).append('\t');
+				sb.append(sc.assignedReads).append('\t');
+				sb.append(sc.assignedBases);
+				sb.append('\n');
 				tsw.print(sb.toString());
 				sb.setLength(0);
 			}

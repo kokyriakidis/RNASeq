@@ -2096,7 +2096,7 @@ public class SamLine implements Serializable {
 		
 		if(optional!=null){
 			for(String s : optional){
-				bb.append('\t').append(s);
+				bb.tab().append(s);
 			}
 		}
 		return bb;

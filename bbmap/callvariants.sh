@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified April 5, 2018
+Last modified October 2, 2018
 
 Description:  Calls variants from sam or bam input.
 In default mode, all input files are combined and treated as a single sample.
@@ -45,6 +45,8 @@ prefilter=f     Use a Bloom filter to exclude variants seen fewer than
                 minreads times.  Doubles the runtime but greatly reduces
                 memory usage.  The results are identical.
 samstreamer=t   (ss) Load reads multithreaded to increase speed.
+                Disable to reduce the number of threads used.  The number of
+                streamer threads can be set with e.g. 'ss=4'; default is 6.
 coverage=t      (cc) Calculate coverage, to better call variants.
 ploidy=1        Set the organism's ploidy.
 rarity=1.0      Penalize the quality of variants with allele fraction 
@@ -141,6 +143,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -197,6 +200,7 @@ callvariants() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz

@@ -26,7 +26,7 @@ public abstract class ShaveObject {
 	/** Explore codes */
 	public static final int KEEP_GOING=0, DEAD_END=1, TOO_SHORT=2, TOO_LONG=3, TOO_DEEP=4, LOOP=7, SUCCESS=8;
 	/** Branch codes */
-	public static final int BRANCH_BIT=16, F_BRANCH=BRANCH_BIT|1, B_BRANCH=BRANCH_BIT|2, D_BRANCH=BRANCH_BIT|3; 
+	public static final int BRANCH_BIT=16, F_BRANCH=BRANCH_BIT|1, B_BRANCH=BRANCH_BIT|2, D_BRANCH=BRANCH_BIT|3;
 	
 	public static final boolean isBranchCode(int code){return (code&BRANCH_BIT)==BRANCH_BIT;}
 	
@@ -41,6 +41,8 @@ public abstract class ShaveObject {
 			"BAD_OWNER", "BAD_SEED", "BRANCH", "14", "15",
 			"BRANCH", "F_BRANCH", "B_BRANCH", "D_BRANCH"
 	};
+	
+	public static final int MAX_CODE=codeStrings.length;
 	
 	public static boolean printEventCounts=false;
 	

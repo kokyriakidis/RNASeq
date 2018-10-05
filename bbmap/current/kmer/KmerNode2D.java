@@ -198,7 +198,7 @@ public class KmerNode2D extends KmerNode {
 	public final boolean dumpKmersAsBytes_MT(final ByteStreamWriter bsw, final ByteBuilder bb, final int k, final int mincount){
 		if(values==null){return true;}
 		toBytes(pivot, values, k, bb);
-		bb.append('\n');
+		bb.nl();
 		if(bb.length()>=16000){
 			ByteBuilder bb2=new ByteBuilder(bb);
 			synchronized(bsw){bsw.addJob(bb2);}

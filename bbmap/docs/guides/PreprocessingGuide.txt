@@ -1,10 +1,10 @@
 Preprocessing Guide
 Written by Brian Bushnell
-Last updated December 18, 2015
+Last updated August 8, 2018
 
 Prior to doing anything with raw reads - mapping, clustering, assembly, etc - it is usually prudent to do certain preprocessing steps.  And these steps are best done in a specific order, which I have detailed below, along with the suggest tool.  Note that many of them (like quality-trimming) are optional, so if you do them, do them in this order; but you don't have to do them.  Others, like adapter-trimming, are not optional and should always be done.
 
-These steps replicate the QA protocol implemented at JGI for Illumina reads.  There is a program "RQCFilter" which implements them as a pipeline, but that is not publically available because it has numerous hard-coded paths to reference datasets of contaminants.
+These steps replicate the QA protocol implemented at JGI for Illumina reads.  "rqcfilter.sh" implements them as a pipeline, but it is less flexible than running the steps individually.
 
 
 0) Format conversion, if necessary.  The simplest format for the subsequent steps is gzipped fastq, with the reads interleaved in a single file if they are paired, but that's not required.  However, H5 and SRA formats are not supported, and unaligned bam should be converted to fastq first.  Tool: Reformat, Samtools, SRA Toolkit, etc.

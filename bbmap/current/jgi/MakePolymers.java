@@ -143,7 +143,7 @@ public class MakePolymers {
 				toBytes(kmer, k, bb);
 			}
 			readsProcessed++;
-			bb.append('\n');
+			bb.nl();
 			if(bb.length>=16384){
 				bsw.print(bb);
 				bb.clear();

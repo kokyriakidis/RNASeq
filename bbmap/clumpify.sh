@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified June 20, 2018
+Last modified September 12, 2018
 
 Description:  Sorts sequences to put similar reads near each other.
 Can be used for increased compression or error correction.
@@ -88,6 +88,8 @@ border=1            Do not use kmers within this many bases of read ends.
 Deduplication parameters:
 dedupe=f            Remove duplicate reads.  For pairs, both must match.
                     By default, deduplication does not occur.
+                    If dedupe and markduplicates are both false, none of
+                    the other duplicate-related flags will have any effect.
 markduplicates=f    Don't remove; just append ' duplicate' to the name.
 allduplicates=f     Mark or remove all copies of duplicates, instead of
                     keeping the highest-quality copy.
@@ -186,6 +188,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

@@ -329,17 +329,7 @@ public class MergeSorted {
 	}
 	
 	public void merge(ArrayList<String> inList, FileFormat ff1, FileFormat ff2){
-		final int oldBuffers=Shared.numBuffers();
-		final int oldBufferLen=Shared.bufferLen();
-		if(inList.size()>4){
-			outstream.println("Reduced buffer sizes prior to merging.");
-			Shared.capBufferLen(4);
-			Shared.capBuffers(1);
-		}
-
-		errorState|=SortByName.mergeAndDump(inList, /*null, */ff1, ff2, delete, useSharedHeader, outstream);
-		Shared.setBufferLen(oldBufferLen);
-		Shared.setBuffers(oldBuffers);
+		errorState|=SortByName.mergeAndDump(inList, /*null, */ff1, ff2, delete, useSharedHeader, outstream, SortByName.maxLengthObservedStatic);
 	}
 	
 	/*--------------------------------------------------------------*/

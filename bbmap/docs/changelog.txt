@@ -167,10 +167,122 @@ Added prealloc flag to CompareSketch.
 Revised TaxServer to use Sketch index, and typically run 1 thread per sketch.
 Added outsketch flag to CompareSketch.
 Modified RandomGenome to be faster and more flexible, and added a shell script.
+38.17
+Added Sketch minLevelExtended flag.
+Fixed bbcms loglog using quality scores from the wrong read.
+Wrote MergeSketch and mergesketch.sh.
+Fixed a major bug in TaxTree.getNodeAtLevel and restarted all servers.
+Wrote KmerLimit and kmerlimit.sh.
+Wrote Shuffle2 and shuffle2.sh.
+Changed blacklist_nt_species_1000.sketch to blacklist_nt_species_500.sketch
+38.18
+Modified RQCFilter and BBMap to correctly track and report unmapped reads and bases when using the Bloom filter.
+Wrote RQCFilterStats for tracking relevant RQCFilter stats.  This is printed to filterStats2.txt.
+Added some columns to BBMap scafstats/refstats where a read is assigned to at most a single reference.
+All classes that used ThreadLocalRandom now call Shared.threadLocalRandom() to comply with Java 6.
+Wrote KmerLimit and kmerlimit.sh to restrict a randomly-ordered file to a specific number of unique kmers.
+Wrote KmerLimit2 and kmerlimit2.sh to restrict an arbitrarily-ordered file to a specific number of unique kmers via subsampling.
+Updated /pipelines/ scripts for fetching and sketching.
+38.19
+Updated RQCFilterData tar.
+Updated wrapper shellscripts to handle Cori error messages.
+Fixed a bug in tracking duplicate reads in RQCFilter.
+38.20
+Added logsum and powsum to stats.sh gc output format 5.
+Fixed a bug in tracking reads in RQCFilter.
+Fixed a basic to extended taxonomy translation routine in TaxTree.
+Added JSON (format 8) to stats.sh.
+Fixed(?) BBMap tracking of trimm/untrimmed bases for mapped and unmapped reads.
+Fixed bugs in RQCFilter tracking of trim/untrimmed mapped bases.
+38.21
+Wrote JsonLiteral and modified Stats to not put quotes around formatted floats.
+Added support for accession, gi, and header lookups to RenameGiToNcbi.
+--help or --version now exit with status 0 rather than 1.
+Updated some documentation.
+Added BBDuk trimpolyg flag.
+FlowCell MicroTiles now track more data and have more methods.
+Wrote PlotFlowCell and plotflowcell.sh, to look at the distribution of polyG in NovaSeq runs.
+Fixed a broken if-else in AccessionToTaxId that was causing TaxServer to start with prealloc false.
+Fixed a bug in verifying other mapped stats in RQCFilter2.
+38.22
+Added getters for sketch.Comparison and sketch.CompareBuffer, and made fields private.
+Fixed bug causing Sketch unique count to display incorrectly - bitsetbits had been changed from 2 to 1.  It should be 2; made static final.
+Fixed an array size bug in Tadpole caused by increasing the range of termination codes.
+Fixed a problem of Kmers being appended to ByteBuilders reverse-complemented.  This impacted Shaver2.
+Fixed a static variable (MASK_CORE) hangover from Tadpole1 into Tadpole2 with TadWrapper.
+Added more BBDuk polyG options.
+Added polyG options and tracking to RQCFilter.
+Fixed an incident where a new KmerComparator was created unnecessarily.
+Clumpify now correctly counts the number of reads when a temp file is streamed without being clumped.
+38.23
+Wrote hiseq.CycleTracker.
+Fixed a parse error in AnalyzeFlowCell.
+Added preliminary G-bubble-detection and elimination to AnalyzeFlowCell, but it is not clear if it is working correctly.
+Wrote hiseq.IlluminaHeaderParser.
+Revised A_Sample, A_SampleMT, and A_SampleByteFile with additional submethods to reduce the length of long methods.
+Removed JNI path flag from BBMerge, BBMap, and RQCFilter shell scripts.
+Fixed a bug in reading adaptersOut.fa from RQCFilter2.
+Changed the way path is appended to output files in RQCFilter2.
+Added poly-C flags to BBDuk.
+Wrote PolymerTracker.
+Added polymer count tracking to BBDuk and RQCFilter.
+Added clipfilter to Reformat.
+38.24
+Skipped this version.
+38.25
+Added maxcov flag to Tadpole.
+Seal now supports filenames without the ref= flag to allow wildcard expansion.
+Removed calcmem.sh perl dependency on Genepool, since Genepool is gone.
+Fixed a logging bug in RQCFilter.
+Added optical alias to RQCFilter.
+Modified mergesorted.sh.
+SortByName and MergeSorted buffer-resizing logic made safer.
+Fixed leftRatio calculation in Tadpole for printing in contig headers.
+Fixed an unwanted print statement in Tadpole dot generation.
+Fixed a crash in Clumpify when handling Ns.
+BBMap bloomserial now defaults to true.
+Deleted normandcorrectwrapper.sh.
+Updated removehuman, removehuman2, etc. to use Bloom filters and clarified that the scripts are for NERSC.
+Wrote PercentEncoding for translating URLs, and made it more efficient by removing String functions.
+38.26
+Improved Blacklist name translation.
+Data internmap is now faster and takes less memory.
+Made prok package for prok gene-calling.
+Moved LOGICAL_PROCESSORS to Shared to avoid an initialization order problem.
+Fixed a bug in FastaReadInputStream with buffer resizing logic.
+Disabled some assertions in BBIndex that do not appear to be valid with a long maxindel and many short contigs.
+Added nl() and tab() to ByteBuilder.
+Reduced memory prealloc request for kmer tables on high memory (>120G) nodes.
+Fixed CallVariants reporting of deletion count.
+Clarified CallVariants SamStreamer flag, and capped it at Shared.threads().
+Clarified callvariants2.sh purpose and function.
+Wrote AnalyzeGenes, CallGenes, and CompareGff.
+Added amino acid output to CallGenes.
 
-TODO: Bryce RQCFilter stats summary.
-TODO: (name len log(len) pow(len)) output for stats.
-***TODO: Include forward branch kmer in contigs, if not also a backward branch. 
+TODO: Homopolymer density test.  This may affect ease of sequencing and assembly.
+TODO: Correlation between Tadpole and Spades stats.
+
+TODO:
+Vasanth:
+/global/projectb/sandbox/rnaseq/projects/Golovinomyces_orontii_MGH1_Metatranscriptome_1196471/multimap
+shifter --image=bryce911/bbtools bbmap.sh nodisk=t nzo=f ambig=all deterministic=t maxindel=100000 ref=/global/dna/projectdirs/RD/rnaseq_store/genomes/Golovinomyces_orontii_MGH1/Golor3_AssemblyScaffolds.fasta rpkm=CTWOX_counts.txt in=read1.fq.gz in2=read2.fq.gz machineout=t out=stdout.sam statsfile=CTWOX_counts.txt.summary | shifter --image=rmonti/samtools samtools view -Sb - | shifter --image=rmonti/samtools samtools sort - -o CTWOX_hits.bam
+
+TODO: Entropyout for BBDuk (Alex Copeland email).
+
+TODO: Percolate A_SampleMT changes to other A_Samples.
+TODO: Note that FilterByTile can be run at a very small tile size with perhaps 50 reads each to detect bubbles at high resolution.  This is more effective than trying to detect a high G rate in a large tile that extends out of the bubble.
+TODO: Verify that gton is working in FilterByTile.  It does seem to reduce homopolymers in some cases, but in other cases it increases the rate by selectively discarding non-G reads while not fixing the remaining reads...  perhaps?  The overall rate of homopolymers and Gs does not change much.  It may also be prudent to calc stdev from cycles rather than tile averages; it's currently way too small to be useful.
+
+TODO: Optical deduplication is pretty slow if there are a massive number of duplicates, though it seems to be linear with the size of the file.  Not a priority.
+
+TODO: minLevelExtended flag would be more useful if it could be used to identify hits where there is a higher identity to a different clade than to the same clade.
+TODO: Add an option to trim depth-1 contig ends in Tadpole (probably just for dead ends).
+TODO: Add fofn support to FileFormat.
+
+*TODO: Seems like last element of a sketch has count lower than it should by 1 or more.
+TODO: Look at Silva names of removed things.  Figure out how to deal with them.
+TODO: see how big a merged Silva sketch is.
+
 TODO: Report (from Donovan) of a site not reported when a pair maps perfectly to two locations with different insert sizes.
 TODO: Note: srd=2 seems to improve scores of metagenome assemblies despite removing fewer kmers.
 TODO: Currently impossible to set ScheduleMaker memRatio except through prefilterFraction flag.  There could be a default static memratio flag, in ScheduleMaker, for example.
@@ -178,26 +290,19 @@ TODO: Currently impossible to set ScheduleMaker memRatio except through prefilte
 TODO: Custom memory settings for Oracle verses Open JDK.
 TODO: Consider not shaving on a case-by-case basis after looking at extensions (use the passed branchMult2 and minCountExtend fields).
 
-TODO: Add an option to trim depth-1 contig ends in Tadpole.
 TODO: BBMerge extend (rsem) mode with 2-bit bloom filter, or maybe even 1-bit.
 TODO: bloom filter with k>31.
 
 TODO: RQCFilter2 produce a file similar to status.log but column-delimited.
 TODO: Modify RQCFilter2 to do entropy filtering in a discrete step.
 TODO: Update RQCFilter2 reproduce.sh to reflect what actually happens.
-TODO: Speed up kmer counting by adjusting the kmer table resizing schedule.
 
 TODO: Retain read names in bbfakereads.
 *TODO: Sanity check for paired reads being under 1mbp.
 TODO: Sketch kmer frequency histograms.
 TODO: Test consect.
-TODO: Check last kmer of original read to see if it drops after merging.
-TODO: Trim to 1bp option for BBDuk.
-
-***TODO: BBDuk - trim failing reads to Xbp, to keep pairing intact.
 
 TODO: Refactor BBMerge?
-TODO: Get trailing kmer counts from before merging and make sure they don't decrease.
 TODO: Tadpole reassemble is creating new ByteBuilders instead of re-using them.
 
 TODO: Write custom Fastq parser.

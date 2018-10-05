@@ -30,6 +30,9 @@ public final class ListNum<K extends Serializable> implements Serializable, Iter
 		return list==null ? 0 : list.size();
 	}
 	
+	@Override
+	public String toString(){return list==null ? "ln.list=null" : list.toString();}
+	
 	public final boolean isEmpty() {return list==null || list.isEmpty();}
 
 	public final K get(int i){return list.get(i);}

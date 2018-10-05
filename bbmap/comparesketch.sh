@@ -94,6 +94,11 @@ level=2             Only report the best record per taxa at this level.
 taxfilter=          List of NCBI taxIDs to filter from output.
 taxfilterlevel=0    Filter everything sharing an ancestor at this level.
 taxfilterinclude=t  Include only filtered records. 'f' will discard them.
+minlevel=           Use this to restrict comparisons to distantly-related
+                    organisms.  Intended for finding misclassified organisms
+                    using all-to-all comparisons.  minlevel=order would only
+                    report hits between organisms related at the order level
+                    or higher, not between same species or genus.
 
 Output format:
 format=2            2: Default format with, per query, one query header line;
@@ -198,6 +203,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

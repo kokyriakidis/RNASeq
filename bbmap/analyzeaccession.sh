@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified May 9, 2018
+Last modified August 9, 2018
 
 Description:  Looks at accessions to see how to compress them.
 
@@ -22,6 +22,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

@@ -103,11 +103,6 @@ public class SketchMakerMini extends SketchObject {
 	/*----------------         Inner Methods        ----------------*/
 	/*--------------------------------------------------------------*/
 	
-	private static final long toValue(long kmer, long rkmer){
-		long value=(rcomp ? Tools.max(kmer, rkmer) : kmer);
-		return value;
-	}
-	
 	/** Iterate through the reads */
 	ArrayList<Sketch> processInner(ConcurrentReadInputStream cris){
 		assert(heap.size()==0);

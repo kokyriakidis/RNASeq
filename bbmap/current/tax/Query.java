@@ -11,6 +11,7 @@ import shared.Timer;
 
 public class Query {
 	
+	/** For testing throughput */
 	public static void main(String[] args){
 		
 //		sun.net.http.errorstream.enableBuffering=true;

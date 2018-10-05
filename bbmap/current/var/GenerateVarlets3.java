@@ -831,7 +831,7 @@ public class GenerateVarlets3 {
 	
 	public static boolean USE_CRIS=true; //Similar speed either way.  "true" may be better with many threads.
 	
-	public static int THREADS=Data.LOGICAL_PROCESSORS;
+	public static int THREADS=Shared.LOGICAL_PROCESSORS;
 	public static int WRITE_BUFFER=16000; //Bigger number uses more memory, for less frequent writes.
 
 	public static boolean CONDENSE=true;

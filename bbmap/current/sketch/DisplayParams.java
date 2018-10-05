@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Locale;
 
+import json.JsonObject;
 import shared.Colors;
 import shared.Tools;
 import structures.ByteBuilder;
-import structures.JsonObject;
 import tax.PrintTaxonomy;
 import tax.TaxFilter;
 import tax.TaxNode;
@@ -190,6 +190,10 @@ public class DisplayParams implements Cloneable {
 			}
 		}
 		
+		else if(a.equalsIgnoreCase("reportAniOnly") || a.equalsIgnoreCase("AniOnly")){
+			reportAniOnly=Tools.parseBoolean(b);
+		}
+		
 		else if(a.equalsIgnoreCase("printMatches")){
 			printMatches=Tools.parseBoolean(b);
 		}else if(a.equalsIgnoreCase("printLength")){
@@ -269,7 +273,8 @@ public class DisplayParams implements Cloneable {
 		}else if(a.equals("reads")){
 			reads=Tools.parseKMG(b);
 		}else if(a.equals("mode") || a.equalsIgnoreCase("single") || a.equalsIgnoreCase("singlesketch") || a.equalsIgnoreCase("onesketch")
-				|| a.equalsIgnoreCase("persequence") || a.equalsIgnoreCase("pertaxa") || a.equalsIgnoreCase("perheader") || a.equalsIgnoreCase("perfile")){
+				|| a.equalsIgnoreCase("persequence") || a.equalsIgnoreCase("sequence") || a.equalsIgnoreCase("pertaxa") 
+				|| a.equalsIgnoreCase("perheader") || a.equalsIgnoreCase("perfile")){
 			mode=SketchObject.parseMode(arg, a, b);
 		}
 		
@@ -280,6 +285,8 @@ public class DisplayParams implements Cloneable {
 			useImgName=Tools.parseBoolean(b);
 		}else if(a.equalsIgnoreCase("useTaxName") || a.equalsIgnoreCase("useTaxAsName")){
 			useTaxName=Tools.parseBoolean(b);
+		}else if(a.equalsIgnoreCase("useFilePrefixName") || a.equalsIgnoreCase("useFilePrefixAsName")){
+			useFilePrefixName=Tools.parseBoolean(b);
 		}
 		
 		else if(a.equalsIgnoreCase("taxfilter") || a.equalsIgnoreCase("taxfilterset")){
@@ -665,17 +672,17 @@ public class DisplayParams implements Cloneable {
 		if(printContam){j.add("Contam", 100*c.contamFraction());}
 		if(printContam2){j.add("Contam2", 100*c.contam2Fraction());}
 		if(printUContam){j.add("uContam", 100*c.uContamFraction());}
-		if(printScore){j.add("Score", c.score);}
+		if(printScore){j.add("Score", c.score());}
 		
 		if(printDepth){j.add("Depth", c.depth(printActualDepth));}
 		if(printDepth2){j.add("Depth2", c.depth2(printActualDepth));}
 		if(printVolume){j.add("Volume", c.volume()+0.001);}
 		
-		if(printMatches){j.add("Matches", c.hits);}
+		if(printMatches){j.add("Matches", c.hits());}
 		if(printUnique){j.add("Unique", c.uHits());}
-		if(printUnique2){j.add("Unique2", c.unique2);}
-		if(printUnique3){j.add("Unique3", c.unique3);}
-		if(printNoHit){j.add("noHit", c.noHits);}
+		if(printUnique2){j.add("Unique2", c.unique2());}
+		if(printUnique3){j.add("Unique3", c.unique3());}
+		if(printNoHit){j.add("noHit", c.noHits());}
 		if(printLength){j.add("Length", c.maxDivisor());}
 		if(printTaxID){j.add("TaxID", tid>=SketchObject.minFakeID ? -1 : tid);}
 		if(printImg){j.add("ImgID", String.format(Locale.ROOT, "\t%d", c.imgID()));}
@@ -685,11 +692,11 @@ public class DisplayParams implements Cloneable {
 		if(printGSeqs){j.add("gSeqs", c.genomeSequences());}
 		
 		//Raw fields
-		if(printRefDivisor){j.add("rDiv", c.refDivisor);}
-		if(printQueryDivisor){j.add("qDiv", c.queryDivisor);}
-		if(printRefSize){j.add("rSize", c.refSize);}
-		if(printQuerySize){j.add("qSize", c.querySize);}
-		if(printContamHits){j.add("cHits", c.contamHits);}
+		if(printRefDivisor){j.add("rDiv", c.refDivisor());}
+		if(printQueryDivisor){j.add("qDiv", c.queryDivisor());}
+		if(printRefSize){j.add("rSize", c.refSize());}
+		if(printQuerySize){j.add("qSize", c.querySize());}
+		if(printContamHits){j.add("cHits", c.contamHits());}
 		
 		if(printIntersection){
 			Sketch intersection=Sketch.intersection(c.a, c.b);
@@ -773,8 +780,11 @@ public class DisplayParams implements Cloneable {
 	
 	String header(){
 		if(format==FORMAT_JSON){return null;}
-		if(format==FORMAT_QUERY_REF_ANI){return "#Query\tRef\tANI\tQSize\tRefSize\tQBases";}
-		if(format==FORMAT_CONSTELLATION){return "#Query\tRef\tWKID\tANI\tQSize\tRefSize\tQBases";}
+		if(format==FORMAT_QUERY_REF_ANI || format==FORMAT_CONSTELLATION){
+			if(reportAniOnly){return "#Query\tRef\tANI";}
+			if(format==FORMAT_QUERY_REF_ANI){return "#Query\tRef\tANI\tQSize\tRefSize\tQBases";}
+			if(format==FORMAT_CONSTELLATION){return "#Query\tRef\tKID\tWKID\tANI\tCmplt\tQSize\tRefSize\tQBases\tRefBases";}
+		}
 		
 		StringBuilder sb=new StringBuilder();
 		
@@ -863,11 +873,11 @@ public class DisplayParams implements Cloneable {
 		if(printDepth2){sb.append('\t').append(c.depth2S(printActualDepth));}
 		if(printVolume){sb.append('\t').append(c.volumeS());}
 		
-		if(printMatches){sb.append('\t').append(c.hits);}
+		if(printMatches){sb.append('\t').append(c.hits());}
 		if(printUnique){sb.append('\t').append(c.uHits());}
-		if(printUnique2){sb.append('\t').append(c.unique2);}
-		if(printUnique3){sb.append('\t').append(c.unique3);}
-		if(printNoHit){sb.append('\t').append(c.noHits);}
+		if(printUnique2){sb.append('\t').append(c.unique2());}
+		if(printUnique3){sb.append('\t').append(c.unique3());}
+		if(printNoHit){sb.append('\t').append(c.noHits());}
 		if(printLength){sb.append('\t').append( c.maxDivisor());}
 		if(printTaxID){sb.append('\t').append(tid>=SketchObject.minFakeID ? -1 : tid);}
 		if(printImg){sb.append('\t').append(c.imgID());}
@@ -877,11 +887,11 @@ public class DisplayParams implements Cloneable {
 		if(printGSeqs){sb.append('\t').append(c.genomeSequences());}
 		
 		//Raw fields
-		if(printRefDivisor){sb.append('\t').append(c.refDivisor);}
-		if(printQueryDivisor){sb.append('\t').append(c.queryDivisor);}
-		if(printRefSize){sb.append('\t').append(c.refSize);}
-		if(printQuerySize){sb.append('\t').append(c.querySize);}
-		if(printContamHits){sb.append('\t').append(c.contamHits);}
+		if(printRefDivisor){sb.append('\t').append(c.refDivisor());}
+		if(printQueryDivisor){sb.append('\t').append(c.queryDivisor());}
+		if(printRefSize){sb.append('\t').append(c.refSize());}
+		if(printQuerySize){sb.append('\t').append(c.querySize());}
+		if(printContamHits){sb.append('\t').append(c.contamHits());}
 		
 		//Text fields
 		if(printTaxName){sb.append('\t').append(c.taxName()==null ? "." : c.taxName());}
@@ -918,9 +928,10 @@ public class DisplayParams implements Cloneable {
 		final long sea=Tools.max(1, c.a.genomeSizeEstimate());
 		final long seb=Tools.max(1, c.b.genomeSizeEstimate());
 		final long ba=Tools.max(1, c.a.genomeSizeBases);
-		final String qName=format==FORMAT_CONSTELLATION ? ""+query.sketchID : useTaxidName ? ""+query.taxID :
+		final long bb=Tools.max(1, c.b.genomeSizeBases);
+		final String qName=format==FORMAT_CONSTELLATION ? (useFilePrefixName ? query.filePrefix() : ""+query.sketchID) : useTaxidName ? ""+query.taxID :
 			useImgName ?  ""+query.imgID : useTaxName ? query.taxName() : query.name();
-		final String rName=format==FORMAT_CONSTELLATION ? ""+c.b.sketchID : useTaxidName ? ""+c.taxID() :
+		final String rName=format==FORMAT_CONSTELLATION ? (useFilePrefixName ? c.b.filePrefix() : ""+c.b.sketchID) : useTaxidName ? ""+c.taxID() :
 			useImgName ?  ""+c.imgID() : useTaxName ? c.taxName() : c.name();
 		final int tid=c.taxID;
 		boolean reset=false;
@@ -948,15 +959,36 @@ public class DisplayParams implements Cloneable {
 
 //		sb.append(rName).append(String.format(Locale.ROOT, "\t%.2f\t%.3f", 100*c.ani(aniFromWkid), sea/(float)seb));
 //		sb.append(rName).append(String.format(Locale.ROOT, "\t%.2f\t%d\t%d\t%d", 100*c.ani(aniFromWkid), sea, seb, ba));
+		
+		//"#Query\tRef\tKID\tWKID\tANI\tCmplt\tQSize\tRefSize\tQBases\tRefBases";
+
+		float kid=100*c.kid();
+		float wkid=100*c.wkid();
+		float ani=100*c.ani(aniFromWkid);
+		float complt=100*c.completeness();
+		
 		sb.append(rName).append('\t');
-		if(format==FORMAT_CONSTELLATION){sb.append(100*c.idMaxDivisor(), 2).append('\t');}
-		sb.append(100*c.ani(aniFromWkid), 2).append('\t');
-		sb.append(sea).append('\t');
-		sb.append(seb).append('\t');
-		sb.append(ba).append('\t');
+		if(reportAniOnly){
+			sb.append(ani, 2).append('\t');
+		}else if(format==FORMAT_CONSTELLATION){
+			sb.append(kid, 2).append('\t');
+			sb.append(wkid, 2).append('\t');
+			sb.append(ani, 2).append('\t');
+			sb.append(complt, 2).append('\t');
+			sb.append(sea).append('\t');
+			sb.append(seb).append('\t');
+//			sb.append(ba).append('\t');
+//			sb.append(bb).append('\t');
+		}else{
+			sb.append(ani, 2).append('\t');
+			sb.append(sea).append('\t');
+			sb.append(seb).append('\t');
+			sb.append(ba).append('\t');
+		}
 		
 		if(reset){sb.append(Colors.RESET);}
 		
+		sb.setLength(sb.length()-1);
 		sb.append('\n');
 	}
 	
@@ -979,7 +1011,7 @@ public class DisplayParams implements Cloneable {
 		
 		if(format==FORMAT_OLD){
 			sb.append(String.format(Locale.ROOT, "WKID %.2f%%\tKID %.2f%%"+ccs+"\tmatches %d\tcompared %d",
-					100*c.idMinDivisor(), 100*c.idMaxDivisor(), c.hits, c.minDivisor())+"\ttaxID "+c.taxID()+
+					100*c.idMinDivisor(), 100*c.idMaxDivisor(), c.hits(), c.minDivisor())+"\ttaxID "+c.taxID()+
 					(printImg ? "\timgID "+c.imgID() : "")+"\tgKmers "+c.genomeSizeKmers()+"\t"+
 					(c.taxName()==null ? "." : c.taxName())+
 					((printOriginalName || (c.taxName()==null && c.name0()!=null)) ? "\t"+(c.name0()==null ? "." : c.name0()) : "")+"\n");
@@ -1003,7 +1035,7 @@ public class DisplayParams implements Cloneable {
 			}
 			
 			sb.append(String.format(Locale.ROOT, "WKID %.2f%%\tKID %.2f%%"+ccs+"\tmatches %d\tcompared %d\t",
-					100*c.idMinDivisor(), 100*c.idMaxDivisor(), c.hits, c.minDivisor()));
+					100*c.idMinDivisor(), 100*c.idMaxDivisor(), c.hits(), c.minDivisor()));
 			sb.append("\ttaxID ").append(c.taxID()).append('\t');
 			if(printImg){sb.append("\timgID ").append(c.imgID()).append('\t');}
 			sb.append(c.taxName()).append('\t');
@@ -1119,10 +1151,12 @@ public class DisplayParams implements Cloneable {
 	public boolean mergePairs=false;
 	public boolean printIntersection=false;
 	
-	//For format 3
+	//For format 3 or 5
 	public boolean useTaxidName=false;
 	public boolean useImgName=false;
 	public boolean useTaxName=false;
+	public boolean useFilePrefixName=false;
+	public boolean reportAniOnly=false;
 	
 	public TaxFilter taxFilter=null;
 

@@ -244,6 +244,8 @@ public class CallVariants {
 			}
 		}
 		
+		streamerThreads=Tools.max(1, Tools.min(streamerThreads, Shared.threads()));
+		assert(streamerThreads>0) : streamerThreads;
 		if(vcf==null){
 			Scaffold.trackStrand=false;
 		}
@@ -528,7 +530,7 @@ public class CallVariants {
 			}
 			outstream.println(b+" of "+a+" variants passed filters ("+String.format(Locale.ROOT, "%.4f%%", b*amult)+").");
 			outstream.println();
-			final long sub=types[Var.SUB], del=types[Var.SUB], ins=types[Var.INS];
+			final long sub=types[Var.SUB], del=types[Var.DEL], ins=types[Var.INS];
 			final long jun=types[Var.LJUNCT]+types[Var.RJUNCT]+types[Var.BJUNCT];
 			outstream.println("Substitutions: \t"+sub+String.format(Locale.ROOT, "\t%.1f%%", sub*bmult));
 			outstream.println("Deletions:     \t"+del+String.format(Locale.ROOT, "\t%.1f%%", del*bmult));

@@ -71,8 +71,8 @@ abstract class AbstractExploreThread extends ShaveObject implements Runnable {
 	final int[] rightCounts=new int[4];
 	final ByteBuilder builderT=new ByteBuilder();
 
-	long[][] countMatrixT=new long[8][8];
-	long[][] removeMatrixT=new long[8][8];
+	long[][] countMatrixT=new long[MAX_CODE+1][MAX_CODE+1];
+	long[][] removeMatrixT=new long[MAX_CODE+1][MAX_CODE+1];
 	
 	public final Thread thread;
 	

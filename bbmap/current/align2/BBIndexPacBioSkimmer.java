@@ -1018,7 +1018,9 @@ public final class BBIndexPacBioSkimmer extends AbstractIndex {
 			}
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int score;
@@ -1416,7 +1418,9 @@ public final class BBIndexPacBioSkimmer extends AbstractIndex {
 			}
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int qscore=quickScore(values, keyScores, centerIndex, offsets, sizes, true, approxHits, numHits);

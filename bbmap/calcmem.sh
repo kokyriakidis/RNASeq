@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#function usage(){
-#	echo "CalcMem v1.07"
+#usage(){
+#	echo "CalcMem v1.08"
 #	echo "Written by Brian Bushnell, Doug Jacobsen, Alex Copeland, Bryce Foster"
 #	echo "Calculates available memory in megabytes"
-#	echo "Last modified December 5, 2017"
+#	echo "Last modified September 6, 2018"
 #}
 
 #Also parses other Java flags
@@ -100,14 +100,6 @@ function freeRam(){
 	local HOSTNAME=`hostname`
 	local sge_x=0
 	local slurm_x=$(( SLURM_MEM_PER_NODE * 1024 ))
-	
-	if [[ $HOSTNAME == genepool* ]]; then
-		# get cluster memory var: 2016-02-22 Bhupender says use SGE_HGR_RAMC
-		sge_x=$(env | grep -i sge_hgr_ramc | perl -ne '$_ =~ s/[^0-9\.]//g; print $_ * 1024*1024')
-		
-		if [ "$sge_x" = "" ]; then sge_x=0; fi
-		#echo "sge = ${sge_x}"
-	fi
 
 	if [[ $RQCMEM -gt 0 ]]; then
 		#echo "branch for manual memory"

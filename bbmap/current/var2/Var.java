@@ -846,7 +846,7 @@ public class Var implements Comparable<Var>, Serializable {
 		return avg;
 	}
 
-	int reflen(){
+	public int reflen(){
 		return stop-start;
 	}
 	
@@ -854,7 +854,7 @@ public class Var implements Comparable<Var>, Serializable {
 		return allele.length;
 	}
 	
-	int type(){return type;}
+	public int type(){return type;}
 	
 	int type_old(){
 		int reflen=reflen(), readlen=readlen();
@@ -977,7 +977,7 @@ public class Var implements Comparable<Var>, Serializable {
 		bb.append(stop).append('\t');
 		bb.append(typeArray[type()]).append('\t');
 		for(byte b : allele){bb.append(b);}
-		bb.append('\t');
+		bb.tab();
 		
 		bb.append(r1plus).append('\t');
 		bb.append(r1minus).append('\t');
@@ -1164,7 +1164,7 @@ public class Var implements Comparable<Var>, Serializable {
 			for(int i=0, rpos=start; i<reflen; i++, rpos++){
 				bb.append(bases==null || rpos<0 || rpos>=bases.length ? (char)'N' : (char)bases[rpos]);
 			}
-			bb.append('\t');
+			bb.tab();
 
 			if(reflen==0 || allele.length<1){bb.append(prevBase);}
 			bb.append(allele).append('\t');
@@ -1178,7 +1178,7 @@ public class Var implements Comparable<Var>, Serializable {
 					bb.append(refBase);
 				}
 			}
-			bb.append('\t');
+			bb.tab();
 
 			if(allele.length<1){
 				bb.append('.').append('\t');
@@ -1243,9 +1243,9 @@ public class Var implements Comparable<Var>, Serializable {
 			bb.length--;
 		}
 		{
-			bb.append('\t');
+			bb.tab();
 			bb.append("GT:DP:AD:AF:RAF:SB:SC:PF");
-			bb.append('\t');
+			bb.tab();
 
 			bb.append(genotype(ploidy, pass));
 			bb.append(':');

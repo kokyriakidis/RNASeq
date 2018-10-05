@@ -1,6 +1,5 @@
 package sketch;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -60,17 +59,6 @@ public class SketchObject {
 			useSizeEstimate=Tools.parseBoolean(b);
 		}else if(a.equalsIgnoreCase("blacklist")){
 			blacklist=b;
-			if(b!=null){
-				if("nt".equalsIgnoreCase(b) && !new File(b).exists()){
-					blacklist=Blacklist.ntBlacklist();
-				}else if(("silva".equalsIgnoreCase(b) || "ribo".equalsIgnoreCase(b)) && !new File(b).exists()){
-					blacklist=Blacklist.silvaBlacklist();
-				}else if("refseq".equalsIgnoreCase(b) && !new File(b).exists()){
-					blacklist=Blacklist.refseqBlacklist();
-				}else if("img".equalsIgnoreCase(b) && !new File(b).exists()){
-					blacklist=Blacklist.imgBlacklist();
-				}
-			}
 		}else if(a.equalsIgnoreCase("whitelist") || a.equalsIgnoreCase("usewhitelist")){
 			useWhitelist=Tools.parseBoolean(b);
 		}
@@ -119,7 +107,8 @@ public class SketchObject {
 		}else if(a.equalsIgnoreCase("intmapsize")){
 			SketchIndex.intMapSize=Tools.parseIntKMG(b);
 		}else if(a.equalsIgnoreCase("bitsetbits")){
-			bitSetBits=Integer.parseInt(b);
+			assert(false) : "bitsetbits should be 2.";
+//			bitSetBits=Integer.parseInt(b);
 		}
 		
 //		else if(a.equalsIgnoreCase("minkmercount") || a.equalsIgnoreCase("minkeycount")){
@@ -689,12 +678,15 @@ public class SketchObject {
 	}
 	
 	public static final int toSketchSize(long genomeSizeBases, long genomeSizeKmers, long genomeSizeEstimate, int maxSketchSize){
+//		assert(false) : genomeSizeBases+", "+genomeSizeKmers+", "+genomeSizeEstimate+", "+maxSketchSize+", "+useSizeEstimate;
 		if(genomeSizeEstimate>0 && useSizeEstimate){
 			return toSketchSizeKmers(genomeSizeEstimate, maxSketchSize);
 		}
 		if(genomeSizeKmers>0){
 			return toSketchSizeKmers(genomeSizeKmers, maxSketchSize);
 		}
+		assert(genomeSizeBases>0) : "BBSketch does not currently support empty files.\n"
+				+genomeSizeBases+", "+genomeSizeKmers+", "+genomeSizeEstimate+", "+maxSketchSize+", "+useSizeEstimate;
 		return toSketchSizeBases(genomeSizeBases, maxSketchSize);
 	}
 	
@@ -738,6 +730,11 @@ public class SketchObject {
 		}else{
 			return Tools.min((int)(2+maxGenomeFraction*genomeSizeKmers), maxSketchSize);
 		}
+	}
+	
+	static final long toValue(long kmer, long rkmer){
+		long value=(rcomp ? Tools.max(kmer, rkmer) : kmer);
+		return value;
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -851,7 +848,7 @@ public class SketchObject {
 	public static float prealloc=0;
 	public static boolean allToAll=false;
 	public static boolean compareSelf=false;
-	public static int bitSetBits=1;
+	public static final int bitSetBits=2; //Needs to be 2 for unique counts.
 
 	private static double keyFraction=0.2;
 	private static double keyFraction2=keyFraction*1.2;

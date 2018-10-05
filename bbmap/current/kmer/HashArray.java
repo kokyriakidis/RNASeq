@@ -437,7 +437,7 @@ public abstract class HashArray extends AbstractKmerTable {
 				long kmer=array[i];
 				if(kmer!=NOT_PRESENT){
 					toBytes(kmer, readCellValues(i, singleton), k, bb);
-					bb.append('\n');
+					bb.nl();
 					if(bb.length()>=16000){
 						ByteBuilder bb2=new ByteBuilder(bb);
 						synchronized(bsw){bsw.addJob(bb2);}
@@ -450,7 +450,7 @@ public abstract class HashArray extends AbstractKmerTable {
 				long kmer=array[i];
 				if(kmer!=NOT_PRESENT && (mincount<2 || readCellValue(i)>=mincount)){
 					toBytes(kmer, readCellValue(i), k, bb);
-					bb.append('\n');
+					bb.nl();
 					if(bb.length()>=16000){
 						ByteBuilder bb2=new ByteBuilder(bb);
 						synchronized(bsw){bsw.addJob(bb2);}

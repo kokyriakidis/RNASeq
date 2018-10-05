@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import dna.AminoAcid;
+import fileIO.ReadWrite;
 import shared.Tools;
 import structures.AbstractBitSet;
 import structures.ByteBuilder;
@@ -271,6 +272,8 @@ public class Sketch extends SketchObject implements Comparable<Sketch> {
 	public static final int countMatches(long[] a, long[] b, int[] aCounts, int[] bCounts, int bid,
 			CompareBuffer buffer, AbstractBitSet present, boolean fillPresent, int[][] taxHits, int contamLevel){
 
+		
+//		if(verbose2){System.err.println("fillPresent: "+fillPresent+", "+present);}
 //		assert(fillPresent) : bid+", "+minFakeID+", "+(taxHits!=null);
 		
 		if(bid>0 && bid<minFakeID && taxHits!=null){
@@ -424,6 +427,8 @@ public class Sketch extends SketchObject implements Comparable<Sketch> {
 //		assert(matches<1000 || multiMatches==0) : bid+", "+unique2+", "+unique3_temp+", "+matches+", "+multiMatches+", "+fillPresent;
 		
 		if(buffer!=null){
+//			System.err.println("*A) "+matches+", "+multiMatches+", "+unique2+", "+unique3_temp);
+//			new Exception().printStackTrace();
 			buffer.set(matches, multiMatches, unique2, unique2+unique3_temp, noHits, contamHits, contamHits-sameTax, multiContamHits, i, j, a.length, b.length, depthSum, depthSum2);
 		}
 		return matches;
@@ -820,6 +825,23 @@ public class Sketch extends SketchObject implements Comparable<Sketch> {
 		return array.length==0 ? 0 : Tools.min(genomeSizeKmers, genomeSizeEstimate(array[array.length-1], array.length));
 	}
 	
+	public long genomeSizeEstimate(int minCount) {
+		if(minCount<2){return genomeSizeEstimate();}
+		if(length()==0){return 0;}
+		long max=0;
+		int num=0;
+		for(int i=0; i<counts.length; i++){
+			if(counts[i]>=minCount){
+				max=array[i];
+				num++;
+			}
+		}
+		if(max==0){return 0;}
+		long est=Tools.min(genomeSizeKmers, SketchObject.genomeSizeEstimate(max, num));
+		return est;
+	}
+	
+	public String filePrefix(){return ReadWrite.stripToCore(fname);}
 	public String name(){return taxName!=null ? taxName : name0!=null ? name0 : fname;}
 	public String taxName(){return taxName;}
 	public String name0(){return name0;}

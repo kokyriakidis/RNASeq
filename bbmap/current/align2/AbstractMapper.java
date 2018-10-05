@@ -1079,9 +1079,12 @@ public abstract class AbstractMapper {
 		if(dest==null){dest="stderr.txt";}
 		TextStreamWriter tswStats=new TextStreamWriter(dest, overwrite, append, false);
 		tswStats.start();
-		
+
 		long readsUsed1=0;
 		long readsUsed2=0;
+		long readsIn1=0;
+		long readsIn2=0;
+		
 		long lowQualityReadsDiscarded1=0;
 		long lowQualityReadsDiscarded2=0;
 		long lowQualityBasesDiscarded1=0;
@@ -1092,10 +1095,15 @@ public abstract class AbstractMapper {
 
 		long basesUsed1=0;
 		long basesUsed2=0;
-		long passedBloomFilter=0;
+		long basesIn1=0;
+		long basesIn2=0;
+		long readsPassedBloomFilter=0;
+		long basesPassedBloomFilter=0;
 		long keysUsed=0;
 		long bothUnmapped=0;
 		long bothUnmappedBases=0;
+		long eitherMapped=0;
+		long eitherMappedBases=0;
 		
 		long syntheticReads=0;
 		long numMated=0;
@@ -1234,8 +1242,11 @@ public abstract class AbstractMapper {
 		long readCountN2=0;
 		long readCountSplice2=0;
 		long readCountE2=0;
-		
+
 		readsUsed1=0;
+		readsUsed2=0;
+		readsIn1=0;
+		readsIn2=0;
 		for(int i=0; i<mtts.length; i++){
 			AbstractMapThread mtt=mtts[i];
 			
@@ -1243,9 +1254,11 @@ public abstract class AbstractMapper {
 				msaIterationsLimited+=mtt.msa.iterationsLimited;
 				msaIterationsUnlimited+=mtt.msa.iterationsUnlimited;
 			}
-			
+
 			readsUsed1+=mtt.readsUsed1;
 			readsUsed2+=mtt.readsUsed2;
+			readsIn1+=mtt.readsIn1;
+			readsIn2+=mtt.readsIn2;
 			syntheticReads+=mtt.syntheticReads;
 			numMated+=mtt.numMated;
 			numMatedBases+=mtt.numMatedBases;
@@ -1256,10 +1269,15 @@ public abstract class AbstractMapper {
 			insertSizeSum+=mtt.insertSizeSum;
 			basesUsed1+=mtt.basesUsed1;
 			basesUsed2+=mtt.basesUsed2;
-			passedBloomFilter+=mtt.passedBloomFilter;
+			basesIn1+=mtt.basesIn1;
+			basesIn2+=mtt.basesIn2;
+			readsPassedBloomFilter+=mtt.readsPassedBloomFilter;
+			basesPassedBloomFilter+=mtt.basesPassedBloomFilter;
 			keysUsed+=mtt.keysUsed;
 			bothUnmapped+=mtt.bothUnmapped;
 			bothUnmappedBases+=mtt.bothUnmappedBases;
+			eitherMapped+=mtt.eitherMapped;
+			eitherMappedBases+=mtt.eitherMappedBases;
 			
 			mapped1+=mtt.mapped1;
 			mappedRetained1+=mtt.mappedRetained1;
@@ -1426,7 +1444,7 @@ public abstract class AbstractMapper {
 				e.printStackTrace();
 			}
 		}
-		
+
 		final long basesUsed=basesUsed1+basesUsed2;
 		
 		final double invTrials=1d/maxReads;
@@ -1595,8 +1613,14 @@ public abstract class AbstractMapper {
 		/** For RQCFilter */
 		lastBothUnmapped=bothUnmapped;
 		lastBothUnmappedBases=bothUnmappedBases;
-		lastReadsUsed=(readsUsed1+readsUsed2);
+		lastEitherMapped=eitherMapped;
+		lastEitherMappedBases=eitherMappedBases;
+		lastReadsUsed=readsUsed1+readsUsed2;
 		lastBasesUsed=basesUsed;
+		lastReadsIn=readsIn1+readsIn2;
+		lastBasesIn=basesIn1+basesIn2;
+		lastReadsPassedBloomFilter=readsPassedBloomFilter;
+		lastBasesPassedBloomFilter=basesPassedBloomFilter;
 		
 		if(PRINT_UNMAPPED_COUNT){
 			double invReadsUsed100=100.0/(readsUsed1+readsUsed2);
@@ -1928,7 +1952,7 @@ public abstract class AbstractMapper {
 			BBSplitter.printCounts(BBSplitter.SET_STATS_FILE, BBSplitter.setCountTable, true, readsUsed1+readsUsed2, nzoStats, sortStats);
 		}
 		
-		final long pbf2=(readsUsed2==0 ? passedBloomFilter : passedBloomFilter/2);
+		final long pbf2=(readsUsed2==0 ? readsPassedBloomFilter : readsPassedBloomFilter/2);
 		final long readSum=truePositiveP1+truePositiveM1+falsePositive1+noHit1+lowQualityReadsDiscarded1+pbf2;
 		assert(!CALC_STATISTICS || readSum==maxReads) :
 			"\nThe number of reads out does not add up to the number of reads in.\nThis may indicate that a mapping thread crashed." +
@@ -1951,6 +1975,9 @@ public abstract class AbstractMapper {
 		
 		long readsUsed1=0;
 		long readsUsed2=0;
+		long readsIn1=0;
+		long readsIn2=0;
+		
 		long lowQualityReadsDiscarded1=0;
 		long lowQualityReadsDiscarded2=0;
 		long lowQualityBasesDiscarded1=0;
@@ -1961,11 +1988,16 @@ public abstract class AbstractMapper {
 
 		long basesUsed1=0;
 		long basesUsed2=0;
-		long passedBloomFilter=0;
+		long basesIn1=0;
+		long basesIn2=0;
+		long readsPassedBloomFilter=0;
+		long basesPassedBloomFilter=0;
 		long basesAtQuickmap=0;
 		long keysUsed=0;
 		long bothUnmapped=0;
 		long bothUnmappedBases=0;
+		long eitherMapped=0;
+		long eitherMappedBases=0;
 		
 		long syntheticReads=0;
 		long numMated=0;
@@ -2084,8 +2116,11 @@ public abstract class AbstractMapper {
 		long matchCountD2=0;
 		long matchCountM2=0;
 		long matchCountN2=0;
-		
+
 		readsUsed1=0;
+		readsUsed2=0;
+		readsIn1=0;
+		readsIn2=0;
 		for(int i=0; i<mtts.length; i++){
 			AbstractMapThread mtt=mtts[i];
 			
@@ -2093,31 +2128,30 @@ public abstract class AbstractMapper {
 				msaIterationsLimited+=mtt.msa.iterationsLimited;
 				msaIterationsUnlimited+=mtt.msa.iterationsUnlimited;
 			}
-//			if(mtt.tcr!=null){
-//				if(mtt.tcr.msaBS!=null){
-//					msaIterationsLimited+=mtt.tcr.msaBS.iterationsLimited;
-//					msaIterationsUnlimited+=mtt.tcr.msaBS.iterationsUnlimited;
-//				}
-//				if(mtt.tcr.msaCS!=null){
-//					msaIterationsLimited+=mtt.tcr.msaCS.iterationsLimited;
-//					msaIterationsUnlimited+=mtt.tcr.msaCS.iterationsUnlimited;
-//				}
-//			}
-			
+
 			readsUsed1+=mtt.readsUsed1;
 			readsUsed2+=mtt.readsUsed2;
+			readsIn1+=mtt.readsIn1;
+			readsIn2+=mtt.readsIn2;
 			syntheticReads+=mtt.syntheticReads;
 			numMated+=mtt.numMated;
+//			numMatedBases+=mtt.numMatedBases;
 			badPairs+=mtt.badPairs;
+//			badPairBases+=mtt.badPairBases;
 			innerLengthSum+=mtt.innerLengthSum;
 			outerLengthSum+=mtt.outerLengthSum;
 			insertSizeSum+=mtt.insertSizeSum;
 			basesUsed1+=mtt.basesUsed1;
 			basesUsed2+=mtt.basesUsed2;
-			passedBloomFilter+=mtt.passedBloomFilter;
+			basesIn1+=mtt.basesIn1;
+			basesIn2+=mtt.basesIn2;
+			readsPassedBloomFilter+=mtt.readsPassedBloomFilter;
+			basesPassedBloomFilter+=mtt.basesPassedBloomFilter;
 			keysUsed+=mtt.keysUsed;
 			bothUnmapped+=mtt.bothUnmapped;
 			bothUnmappedBases+=mtt.bothUnmappedBases;
+			eitherMapped+=mtt.eitherMapped;
+			eitherMappedBases+=mtt.eitherMappedBases;
 			
 			mapped1+=mtt.mapped1;
 			mappedRetained1+=mtt.mappedRetained1;
@@ -2544,6 +2578,18 @@ public abstract class AbstractMapper {
 		}
 		errorState|=tswStats.poisonAndWait();
 		
+		/** For RQCFilter */
+		lastBothUnmapped=bothUnmapped;
+		lastBothUnmappedBases=bothUnmappedBases;
+		lastEitherMapped=eitherMapped;
+		lastEitherMappedBases=eitherMappedBases;
+		lastReadsUsed=readsUsed1+readsUsed2;
+		lastBasesUsed=basesUsed;
+		lastReadsIn=readsIn1+readsIn2;
+		lastBasesIn=basesIn1+basesIn2;
+		lastReadsPassedBloomFilter=readsPassedBloomFilter;
+		lastBasesPassedBloomFilter=basesPassedBloomFilter;
+		
 		if(BBSplitter.TRACK_SCAF_STATS){
 			BBSplitter.printCounts(BBSplitter.SCAF_STATS_FILE, BBSplitter.scafCountTable, true, readsUsed1+readsUsed2, nzoStats, sortStats);
 		}
@@ -2552,7 +2598,7 @@ public abstract class AbstractMapper {
 			BBSplitter.printCounts(BBSplitter.SET_STATS_FILE, BBSplitter.setCountTable, true, readsUsed1+readsUsed2, nzoStats, sortStats);
 		}
 		
-		final long pbf2=(readsUsed2==0 ? passedBloomFilter : passedBloomFilter/2);
+		final long pbf2=(readsUsed2==0 ? readsPassedBloomFilter : readsPassedBloomFilter/2);
 		final long readSum=truePositiveP1+truePositiveM1+falsePositive1+noHit1+lowQualityReadsDiscarded1+pbf2;
 		assert(!CALC_STATISTICS || readSum==maxReads) :
 			"\nThe number of reads out does not add up to the number of reads in.\nThis may indicate that a mapping thread crashed." +
@@ -2680,7 +2726,7 @@ public abstract class AbstractMapper {
 	int bloomFilterMinHits=3;
 	int bloomFilterK=31;
 	BloomFilter bloomFilter;
-	boolean bloomSerial=false;
+	boolean bloomSerial=true;
 	
 	/* ------------ Coverage ----------- */
 	
@@ -2710,10 +2756,19 @@ public abstract class AbstractMapper {
 
 	public static long lastBothUnmapped=0;
 	public static long lastBothUnmappedBases=0;
+	
+	public static long lastEitherMapped=0;
+	public static long lastEitherMappedBases=0;
 
 	public static long lastReadsUsed=0;
 	public static long lastBasesUsed=0;
 
+	public static long lastReadsIn=0;
+	public static long lastBasesIn=0;
+
+	public static long lastReadsPassedBloomFilter=0;
+	public static long lastBasesPassedBloomFilter=0;
+	
 	static final int AMBIG_BEST=0;
 	static final int AMBIG_TOSS=1;
 	static final int AMBIG_RANDOM=2;

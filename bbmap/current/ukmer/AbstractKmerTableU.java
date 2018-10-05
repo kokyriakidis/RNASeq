@@ -396,7 +396,7 @@ public abstract class AbstractKmerTableU {
 	static void appendKmerText(long[] array, int count, int k, ByteBuilder bb){
 		bb.setLength(0);
 		toBytes(array, count, k, bb);
-		bb.append('\n');
+		bb.nl();
 	}
 	
 	

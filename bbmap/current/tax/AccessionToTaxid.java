@@ -90,11 +90,15 @@ public class AccessionToTaxid {
 				skipParse=Tools.parseBoolean(b);
 			}else if(a.equals("skiphash")){
 				skipHash=Tools.parseBoolean(b);
-			}if(b==null || Character.isLetter(b.charAt(0))){
-				if(Tools.parseBoolean(b)){
-					prealloc=0.78f;
+			}else if(a.equals("prealloc")){ 
+				if(b==null || Character.isLetter(b.charAt(0))){
+					if(Tools.parseBoolean(b)){
+						prealloc=0.78f;
+					}else{
+						prealloc=0;
+					}
 				}else{
-					prealloc=0;
+					prealloc=Float.parseFloat(b);
 				}
 			}else if(a.equals("maxpigzprocesses")){
 				maxPigzProcesses=Integer.parseInt(b);
@@ -189,7 +193,7 @@ public class AccessionToTaxid {
 
 		assert(tables==null);
 		if(USE_TABLES){
-			tables=new KmerTableSet(new String[] {"ways=31",("prealloc="+(prealloc>0 ? "prealloc" : "f"))}, 12);
+			tables=new KmerTableSet(new String[] {"ways=31",("prealloc="+(prealloc>0 ? prealloc : "f"))}, 12);
 			tables.allocateTables();
 		}
 		

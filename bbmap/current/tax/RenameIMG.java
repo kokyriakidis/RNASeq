@@ -104,14 +104,14 @@ public class RenameIMG {
 		ffout1=FileFormat.testOutput(out1, FileFormat.FA, null, true, overwrite, append, false);
 	}
 	
-	void copyFiles(ImgRecord2[] array){
+	void copyFiles(ImgRecord[] array){
 		if(useSet){set=new IntHashSet(10000);}
 		ByteStreamWriter bsw=new ByteStreamWriter(ffout1);
 		bsw.start();
-		for(ImgRecord2 ir : array){
+		for(ImgRecord ir : array){
 			if(ir.taxID>0){set.add(ir.taxID);}
 			else{unknownTaxid++;}
-			FileFormat ffin=FileFormat.testInput(ir.name, FileFormat.FA, null, true, true);
+			FileFormat ffin=FileFormat.testInput(ir.path(), FileFormat.FA, null, true, true);
 			process_inner(ffin, bsw, ir.imgID);
 		}
 		knownTaxid=set.size();
@@ -120,11 +120,11 @@ public class RenameIMG {
 	}
 	
 	void process(Timer t){
-		ImgRecord2[] array=ImgRecord2.toArray(in1);
+		ImgRecord[] array=ImgRecord.toArray(in1, TaxTree.IMG_HQ);
 		if(imgFile==null){
 			TaxTree.loadIMG(array);
 		}else{
-			ImgRecord2[] array2=ImgRecord2.toArray(imgFile);
+			ImgRecord[] array2=ImgRecord.toArray(imgFile, TaxTree.IMG_HQ);
 			TaxTree.loadIMG(array2);
 		}
 		
@@ -198,7 +198,7 @@ public class RenameIMG {
 					basesProcessed+=line.length;
 					bb.append(line);
 				}
-				bb.append('\n');
+				bb.nl();
 				bsw.print(bb.toBytes());
 				bb.clear();
 			}

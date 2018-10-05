@@ -426,7 +426,7 @@ public class MutateGenome {
 		
 		for(SmallVar v : vars){
 			v.toVcf(bb);
-			bb.append('\n');
+			bb.nl();
 			if(bb.length()>=64000){
 				bsw.print(bb);
 				bb.clear();

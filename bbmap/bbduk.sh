@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified May 30, 2018
+Last modified August 29, 2018
 
 Description:  Compares reads to the kmers in a reference dataset, optionally 
 allowing an edit distance. Splits the reads into two outputs - those that 
@@ -78,6 +78,7 @@ qchist=<file>       Count of bases with each quality value.
 aqhist=<file>       Histogram of average read quality.
 bqhist=<file>       Quality histogram designed for box plots.
 lhist=<file>        Read length histogram.
+phist=<file>        Polymer length histogram.
 gchist=<file>       Read GC content histogram.
 gcbins=100          Number gchist bins.  Set to 'auto' to use read length.
 maxhistlen=6000     Set an upper bound for histogram lengths; higher uses 
@@ -194,8 +195,6 @@ trimq=6             Regions with average quality BELOW this will be trimmed,
                     if qtrim is set to something other than f.  Can be a 
                     floating-point number like 7.3.
 trimclip=f          Trim soft-clipped bases from sam files.
-trimpolya=0         If greater than 0, trim poly-A or poly-T tails of
-                    at least this length on either end of reads.
 minlength=10        (ml) Reads shorter than this after trimming will be 
                     discarded.  Pairs will be discarded if both are shorter.
 mlf=0               (minlengthfraction) Reads shorter than this fraction of 
@@ -253,6 +252,22 @@ ymin=-1             If positive, discard reads with a lesser Y coordinate.
 xmax=-1             If positive, discard reads with a greater X coordinate.
 ymax=-1             If positive, discard reads with a greater Y coordinate.
 
+Polymer trimming:
+trimpolya=0         If greater than 0, trim poly-A or poly-T tails of
+                    at least this length on either end of reads.
+trimpolygleft=0     If greater than 0, trim poly-G prefixes of at least this
+                    length on the left end of reads.  Does not trim poly-C.
+trimpolygright=0    If greater than 0, trim poly-G tails of at least this 
+                    length on the right end of reads.  Does not trim poly-C.
+trimpolyg=0         This sets both left and right at once.
+filterpolyg=0       If greater than 0, remove reads with a poly-G prefix of
+                    at least this length (on the left).
+Note: there are also equivalent poly-C flags.
+
+Polymer tracking:
+pratio=base,base    'pratio=G,C' will print the ratio of G to C polymers.
+plen=20             Length of homopolymers to count.
+
 Entropy/Complexity parameters:
 entropy=-1          Set between 0 and 1 to filter reads with entropy below
                     that value.  Higher is more stringent.
@@ -263,6 +278,9 @@ entropymask=f       Values:
                        f:  Discard low-entropy sequences.
                        t:  Mask low-entropy parts of sequences with N.
                        lc: Change low-entropy parts of sequences to lowercase.
+entropymark=f       Mark each base with its entropy value.  This is on a scale
+                    of 0-41 and is reported as quality scores, so the output
+                    should be fastq or fasta+qual.
 
 Cardinality estimation:
 cardinality=f       (loglog) Count unique kmers using the LogLog algorithm.
@@ -284,6 +302,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "	
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -341,11 +360,13 @@ bbduk() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBDukF $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBDukF $@"
+	local CMD="java $EA $z $z2 -cp $CP jgi.BBDukF $@"
 	echo $CMD >&2
 	eval $CMD
 }

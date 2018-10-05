@@ -133,6 +133,14 @@ public final class KillSwitch extends Thread {
 	
 	/*--------------------------------------------------------------*/
 	
+	public static final void throwableKill(Throwable e){
+		ballast=null;
+		synchronized(MemKillMessage){
+			e.printStackTrace();
+			kill0();
+		}
+	}
+	
 	public static final void exceptionKill(Exception e){
 		ballast=null;
 		synchronized(MemKillMessage){
@@ -280,30 +288,45 @@ public final class KillSwitch extends Thread {
 
 	/*--------------------------------------------------------------*/
 	
-	public static byte[] copyOf(byte[] buffer, int newLength) {
+	public static byte[] copyOf(byte[] buffer, long newLength) {
+		final int len=buffer.length;
+		final int len2=(int)Tools.min(newLength, Shared.MAX_ARRAY_LEN);
+		if(newLength>len2 && len2<=len){
+			exceptionKill(new Exception("Tried to create an array above length limit: "+len+"," +newLength));
+		}
 		byte[] copy=null;
 		try {
-			copy=Arrays.copyOf(buffer, newLength);
+			copy=Arrays.copyOf(buffer, len2);
 		} catch (OutOfMemoryError e) {
 			memKill(e);
 		}
 		return copy;
 	}
 	
-	public static int[] copyOf(int[] buffer, int newLength) {
+	public static int[] copyOf(int[] buffer, long newLength) {
+		final int len=buffer.length;
+		final int len2=(int)Tools.min(newLength, Shared.MAX_ARRAY_LEN);
+		if(newLength>len2 && len2<=len){
+			exceptionKill(new Exception("Tried to create an array above length limit: "+len+"," +newLength));
+		}
 		int[] copy=null;
 		try {
-			copy=Arrays.copyOf(buffer, newLength);
+			copy=Arrays.copyOf(buffer, len2);
 		} catch (OutOfMemoryError e) {
 			memKill(e);
 		}
 		return copy;
 	}
 	
-	public static long[] copyOf(long[] buffer, int newLength) {
+	public static long[] copyOf(long[] buffer, long newLength) {
+		final int len=buffer.length;
+		final int len2=(int)Tools.min(newLength, Shared.MAX_ARRAY_LEN);
+		if(newLength>len2 && len2<=len){
+			exceptionKill(new Exception("Tried to create an array above length limit: "+len+"," +newLength));
+		}
 		long[] copy=null;
 		try {
-			copy=Arrays.copyOf(buffer, newLength);
+			copy=Arrays.copyOf(buffer, len2);
 		} catch (OutOfMemoryError e) {
 			memKill(e);
 		}

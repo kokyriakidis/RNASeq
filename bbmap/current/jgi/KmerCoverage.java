@@ -13,7 +13,6 @@ import bloom.KCountArray;
 import bloom.KmerCount7MTA;
 import bloom.KmerCountAbstract;
 import dna.AminoAcid;
-import dna.Data;
 import fileIO.FileFormat;
 import fileIO.ReadWrite;
 import fileIO.TextStreamWriter;
@@ -248,7 +247,7 @@ public class KmerCoverage {
 //		}
 		
 		if(threads<=0){
-			if(auto){THREADS=Data.LOGICAL_PROCESSORS;}
+			if(auto){THREADS=Shared.LOGICAL_PROCESSORS;}
 			else{THREADS=8;}
 		}else{
 			THREADS=threads;

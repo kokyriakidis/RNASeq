@@ -1286,6 +1286,9 @@ public class ReadWrite {
 		return fname;
 	}
 	
+	/** 
+	 * Returns the path without the file extension.
+	 * Only strips known extensions. */
 	public static String stripExtension(String fname){
 		if(fname==null){return null;}
 		for(String s0 : FileFormat.EXTENSION_LIST){

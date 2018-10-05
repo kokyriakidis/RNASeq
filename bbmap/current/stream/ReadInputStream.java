@@ -35,7 +35,6 @@ public abstract class ReadInputStream {
 		/* Cleanup */
 		cris.returnList(ln);
 		ReadWrite.closeStream(cris);
-		
 		return list;
 	}
 	

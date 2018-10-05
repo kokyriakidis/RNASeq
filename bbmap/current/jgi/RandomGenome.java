@@ -123,7 +123,7 @@ public class RandomGenome {
 						bb.append(b);
 						prev=b;
 					}
-					bb.append('\n');
+					bb.nl();
 					bsw.print(bb);
 					bb.clear();
 				}
@@ -150,7 +150,7 @@ public class RandomGenome {
 						bb.append(b);
 						prev=(byte)b;
 					}
-					bb.append('\n');
+					bb.nl();
 					bsw.print(bb);
 					bb.clear();
 				}

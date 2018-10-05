@@ -54,35 +54,65 @@ public class Shaver2 extends Shaver {
 	/*----------------       Dead-End Removal       ----------------*/
 	/*--------------------------------------------------------------*/
 	
+//	private boolean valid(ByteBuilder bb, boolean doAssertion){
+//		Kmer kmer=new Kmer(kbig);
+//		if(bb.length()<kbig){return false;}
+//		kmer.clear();
+//		for(int i=0; i<bb.length; i++){
+//			byte b=bb.array[i];
+//			kmer.addRight(b);
+//			if(kmer.len()>=kbig){
+//				int count=getCount(kmer);
+//				if(count<1){
+//					assert(!doAssertion || false) : "count="+count+", minCount="+minCount+", maxCount="+maxCount+", kbig="+kbig+", kmer.kbig="+kmer.kbig+"\n"
+//							+"kmer="+kmer.toString()+"\nbb=  "+bb.toString()+"\n";
+//					kmer.clear();
+//					return false;
+//				}
+//			}
+//		}
+//		kmer.clear();
+//		return true;
+//	}
 	
 	public boolean exploreAndMark(Kmer kmer, ByteBuilder bb, int[] leftCounts, int[] rightCounts, int minCount, int maxCount,
-			int maxLengthToDiscard, int maxDistanceToExplore, boolean prune
-			, long[][] countMatrixT, long[][] removeMatrixT
-			){
+			int maxLengthToDiscard, int maxDistanceToExplore, boolean prune,
+			long[][] countMatrixT, long[][] removeMatrixT){
 		bb.clear();
 		assert(kmer.len>=kmer.kbig);
 		if(findOwner(kmer)>STATUS_UNEXPLORED){return false;}
 		
+		assert(countWithinLimits(kmer)) : "count="+getCount(kmer)+", minCount="+minCount+", maxCount="+maxCount+"\n"+kmer.toString();
+		
 		bb.appendKmer(kmer);
+//		assert(kmer.toString().equals(bb.toString())) : "\n"+kmer+"\n"+bb+"\n";//123
+		//assert(valid(bb, true));
 //		assert(tables.getCount(kmer)==1) : tables.getCount(kmer);//count>0 && count<=maxCount
-		final int a=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		final int rightCode=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		//assert(valid(bb, true));
 		
 		bb.reverseComplementInPlace();
+		//assert(valid(bb, true));
 		kmer=tables.rightmostKmer(bb, kmer);
+		assert(getCount(kmer)>0) : "count="+getCount(kmer)+", minCount="+minCount+", maxCount="+maxCount+", rightCode="+rightCode+"\n"+kmer.toString();//123
 //		assert(tables.getCount(kmer)==1) : tables.getCount(kmer);//count>0 && count<=maxCount
-		final int b=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		final int leftCode=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		//assert(valid(bb, true));
+		
+		kmer=tables.rightmostKmer(bb, kmer);//123
+		assert(getCount(kmer)>0) : "count="+getCount(kmer)+", minCount="+minCount+", maxCount="+maxCount+", leftCode="+leftCode+", rightCode="+rightCode+"\n"+kmer.toString();//123
 
-		final int min=Tools.min(a, b);
-		final int max=Tools.max(a, b);
+		final int min=Tools.min(rightCode, leftCode);
+		final int max=Tools.max(rightCode, leftCode);
 		
 		countMatrixT[min][max]++;
 		
-		if(a==TOO_LONG || a==TOO_DEEP || a==LOOP || a==F_BRANCH){
+		if(rightCode==TOO_LONG || rightCode==TOO_DEEP || rightCode==LOOP || rightCode==F_BRANCH){
 			claim(bb, STATUS_EXPLORED, false, kmer);
 			return false;
 		}
 		
-		if(b==TOO_LONG || b==TOO_DEEP || b==LOOP || b==F_BRANCH){
+		if(leftCode==TOO_LONG || leftCode==TOO_DEEP || leftCode==LOOP || leftCode==F_BRANCH){
 			claim(bb, STATUS_EXPLORED, false, kmer);
 			return false;
 		}
@@ -96,17 +126,17 @@ public class Shaver2 extends Shaver {
 			if(max==DEAD_END || max==B_BRANCH){
 				removeMatrixT[min][max]++;
 				boolean success=claim(bb, STATUS_REMOVE, false, kmer);
-				if(verbose || verbose2){System.err.println("Claiming ("+a+","+b+") length "+bb.length()+": "+bb);}
+				if(verbose || verbose2){System.err.println("Claiming ("+rightCode+","+leftCode+") length "+bb.length()+": "+bb);}
 				assert(success);
 				return true;
 			}
 		}
 		
 		if(removeBubbles){
-			if(a==B_BRANCH && b==B_BRANCH){
+			if(rightCode==B_BRANCH && leftCode==B_BRANCH){
 				removeMatrixT[min][max]++;
 				boolean success=claim(bb, STATUS_REMOVE, false, kmer);
-				if(verbose || verbose2){System.err.println("Claiming ("+a+","+b+") length "+bb.length()+": "+bb);}
+				if(verbose || verbose2){System.err.println("Claiming ("+rightCode+","+leftCode+") length "+bb.length()+": "+bb);}
 				assert(success);
 				return true;
 			}
@@ -116,13 +146,21 @@ public class Shaver2 extends Shaver {
 		return false;
 	}
 	
-	/** Explores a single unbranching path in the forward direction.
-	 * Returns reason for ending in this direction:
-	 *  DEAD_END, TOO_LONG, TOO_DEEP, F_BRANCH, B_BRANCH */
+	/** Explores a single unbranching path in the forward (right) direction.
+	 * @param kmer
+	 * @param bb
+	 * @param leftCounts
+	 * @param rightCounts
+	 * @param minCount
+	 * @param maxCount
+	 * @param maxLength0
+	 * @return A termination code such as DEAD_END
+	 */
 	public int explore(Kmer kmer, ByteBuilder bb, int[] leftCounts, int[] rightCounts, int minCount, int maxCount, int maxLength0){
 		if(verbose){outstream.println("Entering explore with bb.length()="+bb.length());}
-		assert(bb.length()>=kmer.kbig && kmer.len>=kmer.kbig);
 		if(bb.length()==0){bb.appendKmer(kmer);}
+		assert(bb.length()>=kmer.kbig && kmer.len>=kmer.kbig) : bb.length()+", "+kmer.len+", "+kmer.kbig;
+		//assert(valid(bb, true));
 		
 		final int initialLength=bb.length();
 		final int maxLength=maxLength0+kbig;
@@ -156,6 +194,8 @@ public class Shaver2 extends Shaver {
 				outstream.println("rightSecondPos="+rightSecondPos);
 				outstream.println("rightSecond="+rightSecond);
 			}
+			assert(count>0);
+//			assert(getCount(kmer)==count); //123
 			
 			final int prevCount=count;
 			
@@ -163,6 +203,8 @@ public class Shaver2 extends Shaver {
 			final byte b=AminoAcid.numberToBase[rightMaxPos];
 			final long x=rightMaxPos;
 			long evicted=kmer.addRightNumeric(x);
+			
+//			assert(getCount(kmer)==rightMax); //123
 			
 			//Now consider the next kmer
 			if(kmer.xor()==firstKey){
@@ -173,6 +215,7 @@ public class Shaver2 extends Shaver {
 			
 			assert(table.getValue(kmer)==rightMax);
 			count=rightMax;
+			assert(count>0);
 			
 			
 			{//Fill right and look for dead end
@@ -234,6 +277,15 @@ public class Shaver2 extends Shaver {
 			}
 			
 			bb.append(b);
+//			assert(valid(bb, false)); //123
+//			if(!valid(bb, false)){
+//				System.err.println("kbig="+kbig+", "+kmer.kbig+"\nb="+
+//						(char)b+"\n"+Arrays.toString(rightCounts)+"\ncount="+count+", "+getCount(kmer)+"\nrightMax="+rightMax+"\nrightMax="+rightMax);
+//				System.err.println("\nkmer="+kmer+"\nbb=  "+bb);
+//				kmer.addLeftNumeric(evicted);
+//				System.err.println("prev="+kmer+"\nprevCount="+prevCount+", "+getCount(kmer));
+//				valid(bb, true);
+//			}
 			if(verbose){outstream.println("Added base "+(char)b);}
 		}
 		
@@ -568,7 +620,9 @@ public class Shaver2 extends Shaver {
 			assert(len==kmer.len);
 
 			if(len>=kbig){
-				assert(countWithinLimits(kmer)) : getCount(kmer)+", "+len+", "+i+", "+blen+"\n"+kmer.toString();
+				assert(countWithinLimits(kmer)) : "count="+getCount(kmer)+", minCount="+minCount+", maxCount="+maxCount+"\n"
+						+ "len="+len+", i="+i+", blen="+blen+"\n"
+								+ ""+kmer.toString();
 				success=claim(kmer, id/*, rid, i*/);
 				success=(success || !exitEarly);
 			}

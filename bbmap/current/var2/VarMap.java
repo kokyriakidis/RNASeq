@@ -414,7 +414,7 @@ public class VarMap {
 //				ploidy, reads, pairs, properPairs, bases, ref)).append('\n');
 //		for(Var v : array){
 //			v.toText(bb, properPairRate, totalQualityAvg, totalMapqAvg, readLengthAvg, filter.rarity, ploidy, scafMap);//TODO: Track depth
-//			bb.append('\n');
+//			bb.nl();
 //			if(bb.length()>16384){
 //				bsw.print(bb);
 //				bb.clear();
@@ -441,7 +441,7 @@ public class VarMap {
 //				ploidy, reads, pairs, properPairs, bases, ref, scafMap, sampleName, trimWhitespace)).append('\n');
 //		for(Var v : array){
 //			v.toVCF(bb, properPairRate, totalQualityAvg, totalMapqAvg, readLengthAvg, ploidy, scafMap, filter, trimWhitespace);
-//			bb.append('\n');
+//			bb.nl();
 //			if(bb.length()>16384){
 //				bsw.print(bb);
 //				bb.clear();

@@ -9,7 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.ThreadLocalRandom;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
@@ -2804,7 +2804,7 @@ public class KmerNormalize {
 		@Override
 		public void run(){
 			errorStateT=true;
-			randy=ThreadLocalRandom.current();
+			randy=Shared.threadLocalRandom();
 			if(COUNTUP){
 				normalizeInThreadByCountup();
 			}else{
@@ -3003,7 +3003,7 @@ public class KmerNormalize {
 					long coin=0;
 					if(depthproxyAL>maxDepth && (error1 || error2 || !DISCARD_BAD_ONLY)){
 						if(r1.rand<0){
-							coin=randy.nextLong(depthproxyAL)+1;
+							coin=randy.nextInt(depthproxyAL)+1;
 						}else{
 							coin=((long)(r1.rand*depthproxyAL))+1;
 						}
@@ -3434,7 +3434,7 @@ public class KmerNormalize {
 		private long totalBases=0;
 		private long totalReads=0;
 //		private final java.util.Random randy=new java.util.Random();
-		private ThreadLocalRandom randy;
+		private Random randy; //Note that Random does not support nextLong(long)
 
 		public long readsKept=0;
 		public long readsTossed=0;

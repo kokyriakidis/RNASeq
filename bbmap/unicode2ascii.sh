@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 Written by Brian Bushnell
 Last modified October 17, 2017
@@ -14,6 +14,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

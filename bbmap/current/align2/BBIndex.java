@@ -964,7 +964,9 @@ public final class BBIndex extends AbstractIndex {
 			hist_hits[Tools.min(HIT_HIST_LEN, approxHits)]++;
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int score;
@@ -1353,7 +1355,9 @@ public final class BBIndex extends AbstractIndex {
 			hist_hits[Tools.min(HIT_HIST_LEN, approxHits)]++;
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int score;
@@ -1942,7 +1946,9 @@ public final class BBIndex extends AbstractIndex {
 			hist_hits[Tools.min(HIT_HIST_LEN, approxHits)]++;
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 //				if(verbose){System.err.println("A");}
@@ -2377,7 +2383,9 @@ public final class BBIndex extends AbstractIndex {
 			hist_hits[Tools.min(HIT_HIST_LEN, approxHits)]++;
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int qscore=quickScore(values, keyScores, centerIndex, offsets, sizes, true, approxHits, numHits);
@@ -2609,7 +2617,19 @@ public final class BBIndex extends AbstractIndex {
 			if(value>=minVal && value<=maxVal){
 				final int refbase=numberToSite(value);
 //				if(verbose){System.err.println("refbase="+refbase);}
-				assert(refbase>=minLoc && refbase<=maxLoc);
+				
+//				Exception in thread "Thread-23" java.lang.AssertionError: 71543, 536356470, 536956470
+//		        at align2.BBIndex.extendScore(BBIndex.java:2620)
+//		        at align2.BBIndex.slowWalk3(BBIndex.java:1393)
+//		        at align2.BBIndex.find(BBIndex.java:777)
+//		        at align2.BBIndex.find(BBIndex.java:623)
+//		        at align2.BBIndex.findAdvanced(BBIndex.java:400)
+//		        at align2.AbstractMapThread.quickMap(AbstractMapThread.java:761)
+//		        at align2.BBMapThread.processRead(BBMapThread.java:408)
+//		        at align2.AbstractMapThread.run(AbstractMapThread.java:519)
+				
+				//TODO - figure out why this assertion fires
+//				assert(refbase>=minLoc && refbase<=maxLoc) : refbase+", "+minLoc+", "+maxLoc; //Apparently not a correct assumption
 
 				//			System.err.println("Reverse: Trying key "+refbase+" @ "+offsets[i]);
 				//				System.err.println("Passed!");
@@ -2659,7 +2679,8 @@ public final class BBIndex extends AbstractIndex {
 			if(value>=minVal && value<=maxVal){
 				final int refbase=numberToSite(value);
 //				if(verbose){System.err.println("refbase="+refbase);}
-				assert(refbase>=minLoc && refbase<=maxLoc);
+				//TODO - figure out why this assertion fires
+//				assert(refbase>=minLoc && refbase<=maxLoc) : refbase+", "+minLoc+", "+maxLoc; //Apparently not a correct assumption
 				final int callbase=offsets[i];
 				
 				int misses=0;

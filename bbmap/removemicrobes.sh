@@ -1,10 +1,11 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 Written by Brian Bushnell
-Last modified July 23, 2017
+Last modified September 17, 2018
 This script requires at least 10GB RAM.
+It is designed for NERSC and uses hard-coded paths.
 
 Description:  Removes all reads that map to selected common microbial contaminant genomes.
 Removes approximately 98.5% of common contaminant reads, with zero false-positives to non-bacteria.
@@ -39,6 +40,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -53,7 +55,8 @@ popd > /dev/null
 CP="$DIR""current/"
 NATIVELIBDIR="$DIR""jni/"
 
-z="-Xmx12000m"
+z="-Xmx6000m"
+z2="-Xms6000m"
 EA="-ea"
 EOOM=""
 set=0
@@ -88,7 +91,7 @@ function removemicrobes() {
 		module load java/1.8.0_144
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMap strictmaxindel=4 bwr=0.16 bw=12 ef=0.001 minhits=2 path=/global/projectb/sandbox/gaag/bbtools/commonMicrobes pigz unpigz zl=6 qtrim=r trimq=10 untrim idtag printunmappedcount usejni ztd=2 kfilter=25 maxsites=1 k=13 minid=0.95 idfilter=0.95 minhits=2 build=1 $@"
+	local CMD="java $EA $z $z2 -cp $CP align2.BBMap strictmaxindel=4 bwr=0.16 bw=12 ef=0.001 minhits=2 path=/global/projectb/sandbox/gaag/bbtools/commonMicrobes pigz unpigz zl=6 qtrim=r trimq=10 untrim idtag printunmappedcount ztd=2 kfilter=25 maxsites=1 k=13 minid=0.95 idfilter=0.95 minhits=2 build=1 bloomfilter $@"
 	echo $CMD >&2
 	eval $CMD
 }

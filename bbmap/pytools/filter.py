@@ -88,31 +88,31 @@ STEP_ORDER = {
         'ktrim finish'              : 21,
         'delete temp files start'   : 30,
         'delete temp files finish'  : 31,
-        'filter start'              : 40, 
-        'filter finish'             : 41, 
-        'delete temp files start'   : 50, 
-        'delete temp files finish'  : 51, 
-        'short filter start'        : 60, 
-        'short filter finish'       : 61, 
-        'delete temp files start'   : 70, 
-        'delete temp files finish'  : 71, 
-        'removeCommonMicrobes start'    : 80, 
+        'filter start'              : 40,
+        'filter finish'             : 41,
+        'delete temp files start'   : 50,
+        'delete temp files finish'  : 51,
+        'short filter start'        : 60,
+        'short filter finish'       : 61,
+        'delete temp files start'   : 70,
+        'delete temp files finish'  : 71,
+        'removeCommonMicrobes start'    : 80,
         'removeCommonMicrobes finish'   : 81,
         'delete temp files start'       : 90,
         'delete temp files finish'      : 91,
         'dehumanize start'              : 100,
         'dehumanize finish'             : 101,
-        'delete temp files start'       : 110, 
+        'delete temp files start'       : 110,
         'delete temp files finish'      : 111,
-        'merge start'                   : 120, 
-        'merge finish'                  : 121, 
-        'khist start'                   : 130, 
-        'khist finish'                  : 131, 
-        'rqcfilter complete'            : 200, 
+        'merge start'                   : 120,
+        'merge finish'                  : 121,
+        'khist start'                   : 130,
+        'khist finish'                  : 131,
+        'rqcfilter complete'            : 200,
 
 
     RQCFILTER_END     : 300,
-  
+
     POST_START        : 381,
     POST_END          : 382,
 
@@ -168,7 +168,7 @@ Run rqcfilter.sh
 @return outFastqFile, outRrnaFastqFile
 
 """
-def run_rqcfilter(infastq, outDir, prodType, status, enableRmoveMicrobes, enableAggressive, disableRmoveMicrobes, disableClumpify, taxList, log):
+def run_rqcfilter(infastq, outDir, prodType, status, enableRmoveMicrobes, enableAggressive, disableRmoveMicrobes, disableClumpify, taxList, rdb, log):
     log_and_print("\n\n%s - RUN RQCFILTER <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<%s\n" % (color['pink'], color['']))
 
     make_dir_p(outDir)
@@ -225,7 +225,7 @@ def run_rqcfilter(infastq, outDir, prodType, status, enableRmoveMicrobes, enable
 
     cmd = os.path.join(BBDIR, "rqcfilter.sh")
     filterLogFile = os.path.join(outDir, "filter.log")
-    cmdStr = "%s in=%s path=%s %s usejni=f > %s 2>&1" % (cmd, infastq, outDir, opt, filterLogFile)
+    cmdStr = "%s in=%s path=%s %s usejni=f rqcfilterdata=%s > %s 2>&1" % (cmd, infastq, outDir, opt, rdb, filterLogFile)
 
     rtn = [None, status]
     outFastqFile = None
@@ -275,7 +275,7 @@ def run_rqcfilter(infastq, outDir, prodType, status, enableRmoveMicrobes, enable
             fto = os.path.join(adir, '.'.join(['.'.join(t[:-3]), 'filtered', "fastq.gz"]))
             shutil.move(outFastqFile, fto)
             outFastqFile = fto
-            
+
         return outFastqFile
 
     def find_filter_number(outFastqFile):
@@ -342,7 +342,7 @@ def post_process(fastq, outDir, filteredFastq, status, log):
         rawBaseCnt = 0
         newCnt = 0
         newBaseCnt = 0
-        
+
         stats = get_dict_obj(BB_STATS_LIST_FILE_NAME)
         rawCnt = pipeline_val('inputReads', {'type': 'int', 'vtype': 'numeric'}, stats)
         rawBaseCnt = pipeline_val('inputBases', {'type': 'int', 'vtype': 'numeric'}, stats)
@@ -358,13 +358,13 @@ def post_process(fastq, outDir, filteredFastq, status, log):
 
         refStats = {}
         filterLogStat = {}
-        
+
         cardinality = None
         bbdukVersion = None
         bbmapVersion = None
 
         if os.path.isfile("filter.log"):
-            
+
             with open(os.path.join(outDir, "filter.log"), "r") as FLFH:
                 isContamNumChecked = False ## Contamination will be done twice for removeribo or for MTF
                 isKtrimmedTotalRemovedNumChecked = False ## for parsing "Total Removed" after ktrimming
@@ -509,7 +509,7 @@ def post_process(fastq, outDir, filteredFastq, status, log):
                             continue
 
                         toks = l.rstrip().split()
-                        assert len(toks) == 7
+                        assert len(toks) >= 7
 
                         ## the number and percent of reads that map unambiguously or ambiguously to human, cat, dog.
                         ## take the sum of the two numbers (ambiguous plus unambiguous) to use as the final percentage.
@@ -531,15 +531,15 @@ def post_process(fastq, outDir, filteredFastq, status, log):
         ###########################################################
         if os.path.isfile(STATS_LIST_FILE_NAME):
             os.remove(STATS_LIST_FILE_NAME)
-        
+
         with open(BB_STATS_LIST_FILE_NAME) as bbfh:
             with open(STATS_LIST_FILE_NAME, 'a') as fh:
                 for line in bbfh:
                     if not line.startswith("#") and line.strip():
                         fh.write(line)
-            
+
         bbtoolsVersion = None
-    
+
         stats = get_dict_obj(STATS_LIST_FILE_NAME)
         with open(STATS_LIST_FILE_NAME, 'a') as fh:
             for key in readCounts:
@@ -644,7 +644,7 @@ def read_qc(odir, fastq, status):
     return True, qcdir, status
 
 def do_html_body(odir, rawFastq, filteredFastq):
-    
+
     stats = get_dict_obj(os.path.join(odir, STATS_LIST_FILE_NAME))
     tok_map = {
             'inputReads' : {'token' : '[_RAW-READ-CNT_]', 'type': 'bigint'},
@@ -677,7 +677,7 @@ def do_html_body(odir, rawFastq, filteredFastq):
     html = ''
     with open(temp, 'r') as fh:
         html = fh.read()
-        
+
         ## do the place-holder replacement !!
         html = html.replace('[_RAW-FILE-LOCATION_]', rawFastq)
         html = html.replace('[_FILTERED-FILE-LOCATION_]', filteredFastq)
@@ -697,7 +697,7 @@ def do_html_body(odir, rawFastq, filteredFastq):
             hbody = ''
         html = html.replace('[_FILTERED-READ-QC_]', hbody)
     return html
-    
+
 def do_html(odir, qcdir, rawFastq, filteredFastq, status):
     log_and_print("\n\n%s - Create HTML file <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<%s\n" % (color['pink'], color['']))
     fname = os.path.basename(rawFastq)
@@ -711,22 +711,22 @@ def do_html(odir, qcdir, rawFastq, filteredFastq, status):
         html = html.replace('[_REPORT-TITLE_]', 'BBTools Filtering Report')
         html = html.replace('[_INPUT-FILE-NAME_]', fname)
         html = html.replace('[_REPORT-DATE_]', '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now()))
-        
+
         hbody = do_html_body(odir, rawFastq, filteredFastq)
         html = html.replace('[_REPORT-BODY_]', hbody)
-        
+
         fbasename = 'filter.log'
         fname = os.path.join(outputPath, fbasename)
         html = html.replace('[_FILTER-LOG_]', html_tag('a', fbasename, {'href': fbasename}))
         fsize = '%.1f' % (float(os.stat(fname).st_size) / 2014.0)
         html = html.replace('[_FILTER-LOG-SIZE_]', fsize)
-        
+
         # fbasename = 'filter.txt'
         # fname = os.path.join(outputPath, fbasename)
         # html = html.replace('[_FILTER-REPORT_]', html_tag('a', fbasename, {'href': fbasename}))
         # fsize = '%.1f' % (float(os.stat(fname).st_size) / 2014.0)
         # html = html.replace('[_FILTER-REPORT-SIZE_]', fsize)
-                            
+
         ## write the html to file
         idxfile = os.path.join(odir, 'index.html')
         with open(idxfile, 'w') as fh2:
@@ -759,12 +759,37 @@ if __name__ == "__main__":
     ## command line options
     parser = argparse.ArgumentParser(description=usage, formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
+    PROD_TYPE = [
+                    'DNA',
+                    'FUNGAL',
+                    'METAGENOME',
+                    'VIRAL-METAGENOME',
+                    'SAG',
+                    'ISO',
+                    'SAG',
+                    'CELL-ENRICHMENT',
+                    'PLANT-2x150',
+                    'PLANT-2x250',
+                    'RNA',
+                    'SMRNA',
+                    'METATRANSCRIPTOME',
+                    'LFPE',
+                    'CLRS',
+                    'CLIP-PE',
+                    'NEXTERA',
+                    'ITAG',
+                    'MICROTRANS',
+                    'BISULPHITE',
+                    '3PRIMERNA',
+                    'CHIPSEQ',
+                    'RNAWOHUMAN'
+                    ]
+
     parser.add_argument("-f", "--fastq", dest="fastq", help="Set input fastq file (full path to fastq)", required=True)
     parser.add_argument("-o", "--output-path", dest="outputPath", help="Set output path to write to", required=True)
-    parser.add_argument("-p", "--prod-type", dest="prodType", help="Set product type: [DNA | FUNGAL | METAGENOME | \
-VIRAL-METAGENOME |SAG | ISO | SAG | CELL-ENRICHMENT | PLANT-2x150 | PLANT-2x250 | RNA | SMRNA | METATRANSCRIPTOME \
-(or MTF) | LFPE | CLRS | CLIP-PE | NEXTERA-LMP (or NEXTERA) | ITAG | MICROTRANS | BISULPHITE | 3PRIMERNA | CHIPSEQ \
-| RNAWOHUMAN]", required=True)
+    parser.add_argument("-p", "--prod-type", dest="prodType", help="Set product type: %s" % PROD_TYPE, required=True)
+    parser.add_argument("-rdb", "--ref-databases", dest="rqcfilterdata", help="Path to RQCFilterData dir", required=True)
+
     parser.add_argument("-t", "--taxlist", dest="taxList", help="A list of taxid(s) to exclude in CSV format", required=False)
     parser.add_argument("-ap", "--ap", dest="apNum", help="Set AP (Analysis Project) ID. Ex) -ap 123 or -ap 123,456,789", required=False)
     parser.add_argument("-at", "--at", dest="atNum", help="Set AT (Analysis Task) ID. Ex) -at 123 or -at 123,456,789", required=False)
@@ -931,10 +956,10 @@ VIRAL-METAGENOME |SAG | ISO | SAG | CELL-ENRICHMENT | PLANT-2x150 | PLANT-2x250 
             ##
             ## Run rqcfilter.sh
             ##
-            lastFastq, status = run_rqcfilter(lastFastq, outputPath, prodType, status, enableRmoveMicrobes, enableAggressive, disableRmoveMicrobes, disableClumpify, taxList, log) ## Only MTF type generates rRnaFilterFile
+            lastFastq, status = run_rqcfilter(lastFastq, outputPath, prodType, status, enableRmoveMicrobes, enableAggressive, disableRmoveMicrobes, disableClumpify, taxList, options.rqcfilterdata, log) ## Only MTF type generates rRnaFilterFile
             if filteredReadNum == 0:
                 break
-            
+
             ##--------------------------------
             ## Run post processing
             if lastFastq is not None and lastFastq != -1:

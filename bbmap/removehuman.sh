@@ -1,10 +1,11 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 Written by Brian Bushnell
-Last modified October 26, 2015
+Last modified September 17, 2018
 This script requires at least 16GB RAM.
+It is designed for NERSC and uses hard-coded paths.
 
 Description:  Removes all reads that map to the human genome with at least 95% identity after quality trimming.
 Removes approximately 98.6% of human 2x150bp reads, with zero false-positives to non-animals.
@@ -32,6 +33,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -46,7 +48,8 @@ popd > /dev/null
 CP="$DIR""current/"
 NATIVELIBDIR="$DIR""jni/"
 
-z="-Xmx14000m"
+z="-Xmx15000m"
+z2="-Xms15000m"
 EA="-ea"
 EOOM=""
 set=0
@@ -81,7 +84,7 @@ function removehuman() {
 		module load java/1.8.0_144
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMap minratio=0.9 maxindel=3 bwr=0.16 bw=12 quickmatch fast minhits=2 path=/global/projectb/sandbox/gaag/bbtools/hg19 pigz unpigz zl=6 qtrim=r trimq=10 untrim idtag usemodulo printunmappedcount usejni ztd=2 kfilter=25 maxsites=1 k=14 $@"
+	local CMD="java $EA $z $z2 -cp $CP align2.BBMap minratio=0.9 maxindel=3 bwr=0.16 bw=12 quickmatch fast minhits=2 path=/global/projectb/sandbox/gaag/bbtools/hg19 pigz unpigz zl=6 qtrim=r trimq=10 untrim idtag usemodulo printunmappedcount ztd=2 kfilter=25 maxsites=1 k=14 bloomfilter $@"
 	echo $CMD >&2
 	eval $CMD
 }

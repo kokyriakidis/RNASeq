@@ -3,10 +3,10 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified June 18, 2018
+Last modified September 12, 2018
 
 Description:  RQCFilter2 is a revised version of RQCFilter that uses a common path for all dependencies.
-The dependencies are available at http://portal.nersc.gov/dna/microbial/assembly/bushnell/RQCFilterData.tar.gz
+The dependencies are available at http://portal.nersc.gov/dna/microbial/assembly/bushnell/RQCFilterData.tar
 
 Performs quality-trimming, artifact removal, linker-trimming, adapter trimming, and spike-in removal using BBDukF.
 Performs human/cat/dog/mouse/microbe removal using BBMap.
@@ -29,6 +29,7 @@ kmerstats=kmerStats.txt      Kmer stats file name (duk-like output).
 log=status.log               Progress log file name.
 filelist=file-list.txt       List of output files.
 stats=filterStats.txt        Overall stats file name.
+stats2=filterStats2.txt      Better overall stats file name.
 ihist=ihist_merge.txt        Insert size histogram name.  Set to null to skip merging.
 outribo=ribo.fq.gz           Output for ribosomal reads, if removeribo=t.
 reproduceName=reproduce.sh   Name of shellscript to reproduce these results.
@@ -74,7 +75,7 @@ mapref=             Remove contaminants by mapping to this fasta file (or comma-
 
 Bloom filter parameters (for vertebrate mapping):
 bloom=t             Use a Bloom filter to accelerate mapping.
-bloomminreads=20m   Disable Bloom filter if there are fewer than this many reads.
+bloomminreads=4m   Disable Bloom filter if there are fewer than this many reads.
 bloomk=29           Kmer length for Bloom filter
 bloomhashes=1       Number of hashes for the Bloom filter.
 bloomminhits=6      Minimum consecutive hits to consider a read as matching.
@@ -97,6 +98,8 @@ detectmicrobes2=f   (detectothermicrobes) Detect an extended set of microbes tha
 
 Filtering parameters (for artificial and genomic contaminants):
 filterpolya=f       Remove reads containing poly-A sequence (for RNA-seq).
+filterpolyg=0       Remove reads that start with a G polymer at least this long (0 disables).
+trimpolyg=0         Trim reads that start or end with a G polymer at least this long (0 disables).
 phix=t              Remove reads containing phiX kmers.
 lambda=f            Remove reads containing Lambda phage kmers.
 pjet=t              Remove reads containing PJET kmers.
@@ -131,17 +134,19 @@ FilterByTile parameters:
 filterbytile=f      Run FilterByTile to remove reads from low-quality parts of the flowcell.
 
 Clumpify parameters:
-clumpify=f          Run clumpify.
-dedupe=f            Remove duplicate reads.
-alldupes=f          Remove all copies of duplicates.
+clumpify=f          Run clumpify; all deduplication flags require this.
+dedupe=f            Remove duplicate reads; all deduplication flags require this.
 opticaldupes=f      Remove optical duplicates (Clumpify optical flag).
-edgedupes=f         Remove tile-edge duplicates (Clumpify spantiles flag).
+edgedupes=f         Remove tile-edge duplicates (Clumpify spany and adjacent flags).
 dpasses=1           Use this many deduplication passes.
 dsubs=2             Allow this many substitutions between duplicates.
 ddist=40            Remove optical/edge duplicates within this distance.
 lowcomplexity=f     Set to true for low-complexity libraries such as RNA-seq to improve estimation of memory requirements.
 clumpifytmpdir=f    Use TMPDIR for clumpify temp files.
 clumpifygroups=-1   If positive, force Clumpify to use this many groups.
+*** For NextSeq, the recommended deduplication flags are: clumpify dedupe edgedupes
+*** For NovaSeq, the recommended deduplication flags are: clumpify dedupe opticaldupes ddist=12000
+*** For HiSeq, the recommended deduplication flags are: clumpify dedupe opticaldupes
 
 Sketch parameters:
 sketch=t            Run SendSketch on 2M read pairs.
@@ -178,6 +183,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -245,7 +251,8 @@ rqcfilter() {
 		module load pigz
 		export TZ="America/Los_Angeles" 
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.RQCFilter2 $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.RQCFilter2 $@"
+	local CMD="java $EA $z $z2 -cp $CP jgi.RQCFilter2 $@"
 	echo $CMD >&2
 	eval $CMD
 }

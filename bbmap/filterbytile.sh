@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified February 23, 2017
+Last modified August 22, 2017
 
 Description:  Filters reads based on positional quality over a flowcell.
 Quality is estimated based on quality scores and kmer uniqueness.
@@ -76,6 +76,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

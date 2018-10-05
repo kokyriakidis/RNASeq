@@ -97,6 +97,20 @@ public class RenameGiToNcbi {
 				AccessionToTaxid.skipHash=Tools.parseBoolean(b);
 			}
 			
+			else if(a.equals("mode")){
+				if(b!=null && Character.isDigit(b.charAt(0))){
+					mode=Integer.parseInt(b);
+				}else if("accession".equalsIgnoreCase(b)){
+					mode=ACCESSION_MODE;
+				}else if("gi".equalsIgnoreCase(b)){
+					mode=GI_MODE;
+				}else if("header".equalsIgnoreCase(b)){
+					mode=HEADER_MODE;
+				}else{
+					assert(false) : "Bad mode: "+b;
+				}
+			}
+			
 			else if(a.equals("verbose")){
 				verbose=Tools.parseBoolean(b);
 				ByteFile1.verbose=verbose;
@@ -252,7 +266,14 @@ public class RenameGiToNcbi {
 				bb.append(',');
 				if(bb.length()>100000){
 					bb.setLength(bb.length()-1);
-					int[] ret=TaxClient.accessionToTaxidArray(bb.toString());
+					int[] ret;
+					if(mode==ACCESSION_MODE){
+						ret=TaxClient.accessionToTaxidArray(bb.toString());
+					}else if(mode==GI_MODE){
+						ret=TaxClient.giToTaxidArray(bb.toString());
+					}else{
+						ret=TaxClient.headerToTaxidArray(bb.toString());
+					}
 					assert(ret!=null) : bb.toString();
 					for(int i : ret){ids.add(i);}
 					bb.clear();
@@ -262,7 +283,14 @@ public class RenameGiToNcbi {
 		}
 		if(bb.length()>0){
 			bb.setLength(bb.length()-1);
-			int[] ret=TaxClient.accessionToTaxidArray(bb.toString());
+			int[] ret;
+			if(mode==ACCESSION_MODE){
+				ret=TaxClient.accessionToTaxidArray(bb.toString());
+			}else if(mode==GI_MODE){
+				ret=TaxClient.giToTaxidArray(bb.toString());
+			}else{
+				ret=TaxClient.headerToTaxidArray(bb.toString());
+			}
 			assert(ret!=null) : bb.toString();
 			for(int i : ret){ids.add(i);}
 			bb.clear();
@@ -400,7 +428,14 @@ public class RenameGiToNcbi {
 		assert(bb.endsWith(','));
 		bb.length--;
 		
-		final int[] serverIds=TaxClient.accessionToTaxidArray(bb.toString());
+		final int[] serverIds;
+		if(mode==ACCESSION_MODE){
+			serverIds=TaxClient.accessionToTaxidArray(bb.toString());
+		}else if(mode==GI_MODE){
+			serverIds=TaxClient.giToTaxidArray(bb.toString());
+		}else{
+			serverIds=TaxClient.headerToTaxidArray(bb.toString());
+		}
 		bb.clear();
 		
 		for(int lineNum=0, serverNum=0; lineNum<=lines.size(); lineNum++){
@@ -537,6 +572,9 @@ public class RenameGiToNcbi {
 	private boolean keepAll=true;
 	private boolean shrinkNames=false;
 	private boolean useServer=false;
+	
+	private int mode;
+	private static final int ACCESSION_MODE=0, GI_MODE=1, HEADER_MODE=2;
 	
 	/*--------------------------------------------------------------*/
 	

@@ -171,21 +171,21 @@ public class FindAncestor {
 					for(int i=0; i<line.length && line[i]!='\t'; i++){
 						bb.append(line[i]);
 					}
-					bb.append('\t');
+					bb.tab();
 					bb.append(ancestor);
-					bb.append('\t');
+					bb.tab();
 					bb.append(majority);
-					bb.append('\t');
+					bb.tab();
 					
 					fillTraversal(majority, traversal, true);
 					writeTraversal(traversal, bb);
-					bb.append('\n');
+					bb.nl();
 					
 					for(int i=0; i<ncbiList.size; i++){
 						final int id=ncbiList.get(i);
 						fillTraversal(id, traversal, true);
 						writeTraversal(traversal, bb);
-						bb.append('\n');
+						bb.nl();
 					}
 					
 					bsw.print(bb.toBytes());
@@ -233,7 +233,7 @@ public class FindAncestor {
 				TaxNode tn=tree.getNode(id);
 				//			bb.append(tn.level+"_"+tn.name);
 				bb.append(/*tn.level+"_"+*/tn.name);
-				if(i>0){bb.append('\t');}
+				if(i>0){bb.tab();}
 			}
 		}
 	}

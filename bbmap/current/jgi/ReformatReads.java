@@ -228,6 +228,7 @@ public class ReformatReads {
 			
 			idFilter=parser.idFilter;
 			subfilter=parser.subfilter;
+			clipfilter=parser.clipfilter;
 			delfilter=parser.delfilter;
 			insfilter=parser.insfilter;
 			indelfilter=parser.indelfilter;
@@ -235,7 +236,7 @@ public class ReformatReads {
 			inslenfilter=parser.inslenfilter;
 			editfilter=parser.editfilter;
 			
-			USE_EDIT_FILTER=(subfilter>-1 || delfilter>-1 || insfilter>-1 || indelfilter>-1 || dellenfilter>-1 || inslenfilter>-1 || editfilter>-1);
+			USE_EDIT_FILTER=(subfilter>-1 || delfilter>-1 || insfilter>-1 || indelfilter>-1 || dellenfilter>-1 || inslenfilter>-1 || editfilter>-1 || clipfilter>-1);
 
 			setInterleaved=parser.setInterleaved;
 			
@@ -1207,9 +1208,11 @@ public class ReformatReads {
 		final int del=Read.countDeletions(r.match);
 		final int inscount=Read.countInsertionEvents(r.match);
 		final int delcount=Read.countDeletionEvents(r.match);
+		final int clip=SamLine.countLeadingClip(r.match)+SamLine.countTrailingClip(r.match);
 		
 		boolean bad=false;
 		bad=bad||(subfilter>=0 && sub>subfilter);
+		bad=bad||(clipfilter>=0 && clip>clipfilter);
 		bad=bad||(insfilter>=0 && inscount>insfilter);
 		bad=bad||(delfilter>=0 && delcount>delfilter);
 		bad=bad||(inslenfilter>=0 && r.hasLongInsertion(inslenfilter));
@@ -1361,6 +1364,7 @@ public class ReformatReads {
 	
 	private float idFilter=-1;
 	private int subfilter=-1;
+	private int clipfilter=-1;
 	private int delfilter=-1;
 	private int insfilter=-1;
 	private int indelfilter=-1;

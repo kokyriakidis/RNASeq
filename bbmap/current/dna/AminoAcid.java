@@ -68,6 +68,10 @@ public final class AminoAcid {
 		return sb.reverse().toString();
 	}
 	
+	public static final String codonToString(int codon){
+		return codon>=0 && codon<codonToString.length ? codonToString[codon] : "NNN";
+	}
+	
 	
 	public final String name;
 	public final String symbol;
@@ -160,6 +164,8 @@ public final class AminoAcid {
 	
 	public static final byte[] baseToComplementExtended=new byte[128];
 
+	public static final String[] codonToString=new String[64];
+	
 	/** Uracil to Thymine, everything else unchanged */
 	public static final byte[] uToT=new byte[256];
 	/** Thymine to Uracil, everything else unchanged */
@@ -323,9 +329,9 @@ public final class AminoAcid {
 		return numberToBase[COLORS[a][color]];
 	}
 	
-	public static final byte toNumber(String code){
-		return toNumber(code.charAt(0), code.charAt(1), code.charAt(2));
-	}
+//	public static final byte toNumber(String code){
+//		return toNumber(code.charAt(0), code.charAt(1), code.charAt(2));
+//	}
 	
 	public static final AminoAcid toAA(String code){
 		return toAA(code.charAt(0), code.charAt(1), code.charAt(2));
@@ -446,7 +452,18 @@ public final class AminoAcid {
 		}
 		return x;
 	}
-	
+
+	public static final byte toNumber(String s){
+		assert(s.length()==3);
+		int num=0;
+		for(int i=0; i<3; i++){
+			char c=s.charAt(i);
+			int x=baseToNumber[c];
+			if(x<0){return (byte)-1;}
+			num=(num<<2)|x;
+		}
+		return (byte)num;
+	}
 	
 	public static final byte toNumber(char c1, char c2, char c3){
 		assert(baseToNumberACGTN2[c1]>=0 && baseToNumberACGTN2[c2]>=0 && baseToNumberACGTN2[c3]>=0);
@@ -548,6 +565,20 @@ public final class AminoAcid {
 		return out;
 	}
 	
+	public static final byte[] toAAs(byte[] bases, int start, int stop){
+		if(bases==null){return null;}
+		stop-=2;
+		final int blen=stop-start;
+		final int alen=blen/3;
+		
+		byte[] out=new byte[alen];
+		for(int i=2+start, j=0; i<stop; i+=3, j++){
+			byte a=toByte(bases[i-2], bases[i-1], bases[i]);
+			out[j]=a;
+		}
+		return out;
+	}
+	
 	public static final byte[] toAAQuality(byte[] quals, int frame){
 		assert(frame>=0 && frame<3);
 		int blen=quals.length-frame;
@@ -600,7 +631,7 @@ public final class AminoAcid {
 	}
 	
 	static {
-
+		
 		for(int i=0; i<uToT.length; i++){uToT[i]=(byte)i;}
 		uToT['u']='t';
 		uToT['U']='T';
@@ -780,6 +811,10 @@ public final class AminoAcid {
 			AminoAcid aa=stringToAA.get(s);
 			assert(aa!=null);
 			stringToAA.put(s.toLowerCase(), aa);
+		}
+		
+		for(int i=0; i<codonToString.length; i++){
+			codonToString[i]=kmerToString(i, 3);
 		}
 		
 	}

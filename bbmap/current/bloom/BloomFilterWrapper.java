@@ -140,7 +140,7 @@ public class BloomFilterWrapper {
 			}
 			
 			else if(a.equals("ref")){
-				addFiles(b, ref);
+				Tools.addFiles(b, ref);
 			}else if(a.equals("outm") || a.equals("outm1") || a.equals("outbad") || a.equals("outbad1") || a.equals("outmatch") || a.equals("outmatch1")){
 				outm1=b;
 			}else if(a.equals("outm2") || a.equals("outbad2") || a.equals("outmatch2")){
@@ -287,16 +287,6 @@ public class BloomFilterWrapper {
 			}
 			t.stop("Filter creation: \t\t");
 			outstream.println(filter.filter.toShortString());
-		}
-	}
-	
-	private static void addFiles(String b, ArrayList<String> list){
-		if(b==null){list.clear();}
-		else{
-			if(new File(b).exists()){list.add(b);}
-			else{
-				for(String s : b.split(",")){list.add(s);}
-			}
 		}
 	}
 	

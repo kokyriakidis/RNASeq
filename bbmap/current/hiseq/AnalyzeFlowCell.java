@@ -70,12 +70,62 @@ public class AnalyzeFlowCell {
 		ReadWrite.USE_PIGZ=ReadWrite.USE_UNPIGZ=true;
 		ReadWrite.MAX_ZIP_THREADS=Shared.threads();
 		
+		Parser parser=parse(args);
+		
+		if(gToN || discardG){MicroTile.TRACK_CYCLES=true;}
+		
+		{//Process parser fields
+			Parser.processQuality();
+			
+			maxReads=parser.maxReads;
+			
+			overwrite=parser.overwrite;
+			append=parser.append;
+			setInterleaved=parser.setInterleaved;
+			
+			in1=parser.in1;
+			in2=parser.in2;
+			qfin1=parser.qfin1;
+			qfin2=parser.qfin2;
+
+			out1=parser.out1;
+			out2=parser.out2;
+			qfout1=parser.qfout1;
+			qfout2=parser.qfout2;
+			
+			extin=parser.extin;
+			extout=parser.extout;
+			
+
+			trimq=parser.trimq;
+			trimE=parser.trimE();
+			minlen=parser.minReadLength;
+			trimLeft=parser.qtrimLeft;
+			trimRight=parser.qtrimRight;
+		}
+		
+		checkFiles();
+		
+		//Create output FileFormat objects
+		ffout1=FileFormat.testOutput(out1, FileFormat.FASTQ, extout, true, overwrite, append, false);
+		ffout2=FileFormat.testOutput(out2, FileFormat.FASTQ, extout, true, overwrite, append, false);
+		ffoutbad=FileFormat.testOutput(outbad, FileFormat.FASTQ, extout, true, overwrite, append, false);
+
+		//Create input FileFormat objects
+		ffin1=FileFormat.testInput(in1, FileFormat.FASTQ, extin, true, true);
+		ffin2=FileFormat.testInput(in2, FileFormat.FASTQ, extin, true, true);
+	}
+	
+	/*--------------------------------------------------------------*/
+	/*----------------    Initialization Helpers    ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	private Parser parse(String[] args){
 		//Create a parser object
 		Parser parser=new Parser();
 		parser.qtrimRight=trimRight;
 		parser.trimq=trimq;
 		parser.minReadLength=minlen;
-		boolean setInterleaved=false; //Whether interleaved was explicitly set.
 		
 		//Parse each argument
 		for(int i=0; i<args.length; i++){
@@ -113,25 +163,47 @@ public class AnalyzeFlowCell {
 			}
 			
 			else if(a.equals("deviations") || a.equals("d")){
-				qDeviations=uDeviations=eDeviations=Float.parseFloat(b);
+				qDeviations=uDeviations=eDeviations=gDeviations=Float.parseFloat(b);
 			}else if(a.equals("qdeviations") || a.equals("qd") || a.equals("dq")){
 				qDeviations=Float.parseFloat(b);
 			}else if(a.equals("udeviations") || a.equals("ud") || a.equals("du")){
 				uDeviations=Float.parseFloat(b);
 			}else if(a.equals("edeviations") || a.equals("ed") || a.equals("de")){
 				eDeviations=Float.parseFloat(b);
-			}else if(a.equals("qfraction") || a.equals("qf")){
+			}else if(a.equals("gdeviations") || a.equals("gd") || a.equals("dg")){
+				gDeviations=Float.parseFloat(b);
+			}
+			
+			else if(a.equals("qfraction") || a.equals("qf")){
 				qualFraction=Float.parseFloat(b);
-			}else if(a.equals("efraction") || a.equals("uf")){
+			}else if(a.equals("ufraction") || a.equals("uf")){
 				uniqueFraction=Float.parseFloat(b);
 			}else if(a.equals("efraction") || a.equals("ef")){
 				errorFreeFraction=Float.parseFloat(b);
-			}else if(a.equals("qabsolute") || a.equals("qa")){
+			}else if(a.equals("gfraction") || a.equals("gf")){
+				gFraction=Float.parseFloat(b);
+			}
+			
+			else if(a.equals("qabsolute") || a.equals("qa")){
 				qualAbs=Float.parseFloat(b);
 			}else if(a.equals("uabsolute") || a.equals("ua")){
 				uniqueAbs=Float.parseFloat(b);
 			}else if(a.equals("eabsolute") || a.equals("ea")){
 				errorFreeAbs=Float.parseFloat(b);
+			}else if(a.equals("gabsolute") || a.equals("ga")){
+				gAbs=Float.parseFloat(b);
+			}
+			
+			else if(a.equals("gton")){
+				gToN=Tools.parseBoolean(b);
+			}else if(a.equals("discardg")){
+				discardG=Tools.parseBoolean(b);
+			}
+			
+			else if(a.equals("minpolyg")){
+				MicroTile.MIN_POLY_G=Integer.parseInt(b);
+			}else if(a.equals("trackcycles")){
+				MicroTile.TRACK_CYCLES=Tools.parseBoolean(b);
 			}
 			
 			else if(a.equals("parse_flag_goes_here")){
@@ -144,68 +216,62 @@ public class AnalyzeFlowCell {
 				//				throw new RuntimeException("Unknown parameter "+args[i]);
 			}
 		}
-		
-		{//Process parser fields
-			Parser.processQuality();
-			
-			maxReads=parser.maxReads;
-			
-			overwrite=parser.overwrite;
-			append=parser.append;
-			setInterleaved=parser.setInterleaved;
-			
-			in1=parser.in1;
-			in2=parser.in2;
-			qfin1=parser.qfin1;
-			qfin2=parser.qfin2;
-
-			out1=parser.out1;
-			out2=parser.out2;
-			qfout1=parser.qfout1;
-			qfout2=parser.qfout2;
-			
-			extin=parser.extin;
-			extout=parser.extout;
-			
-
-			trimq=parser.trimq;
-			trimE=parser.trimE();
-			minlen=parser.minReadLength;
-			trimLeft=parser.qtrimLeft;
-			trimRight=parser.qtrimRight;
-		}
-		
+		return parser;
+	}
+	
+	private void checkFiles(){
+		doPoundReplacement();
+		adjustInterleaving();
+		checkFileExistence();
+		checkStatics();
+	}
+	
+	private void doPoundReplacement(){
 		//Do input file # replacement
 		if(in1!=null && in2==null && in1.indexOf('#')>-1 && !new File(in1).exists()){
 			in2=in1.replace("#", "2");
 			in1=in1.replace("#", "1");
 		}
-		
+
 		//Do output file # replacement
 		if(out1!=null && out2==null && out1.indexOf('#')>-1){
 			out2=out1.replace("#", "2");
 			out1=out1.replace("#", "1");
 		}
 		
+		//Ensure there is an input file
+		if(in1==null){throw new RuntimeException("Error - at least one input file is required.");}
+
+		//Ensure out2 is not set without out1
+		if(out1==null && out2!=null){throw new RuntimeException("Error - cannot define out2 without defining out1.");}
+	}
+	
+	private void checkFileExistence(){
+		
+		//Ensure output files can be written
+		if(!Tools.testOutputFiles(overwrite, append, false, out1, out2, outbad, dump)){
+			outstream.println((out1==null)+", "+(out2==null)+", "+out1+", "+out2+", "+outbad);
+			throw new RuntimeException("\n\noverwrite="+overwrite+"; Can't write to output files "+out1+", "+out2+", "+outbad+", "+dump+"\n");
+		}
+
+		//Ensure input files can be read
+		if(!Tools.testInputFiles(false, true, in1, in2)){
+			throw new RuntimeException("\nCan't read some input files.\n");  
+		}
+
+		//Ensure that no file was specified multiple times
+		if(!Tools.testForDuplicateFiles(true, in1, in2, out1, out2, outbad, dump)){
+			throw new RuntimeException("\nSome file names were specified multiple times.\n");
+		}
+	}
+	
+	private void adjustInterleaving(){
 		//Adjust interleaved detection based on the number of input files
 		if(in2!=null){
 			if(FASTQ.FORCE_INTERLEAVED){outstream.println("Reset INTERLEAVED to false because paired input files were specified.");}
 			FASTQ.FORCE_INTERLEAVED=FASTQ.TEST_INTERLEAVED=false;
 		}
-		
-		assert(FastaReadInputStream.settingsOK());
-		
-		//Ensure there is an input file
-		if(in1==null){throw new RuntimeException("Error - at least one input file is required.");}
-		
-		//Adjust the number of threads for input file reading
-		if(!ByteFile.FORCE_MODE_BF1 && !ByteFile.FORCE_MODE_BF2 && Shared.threads()>2){
-			ByteFile.FORCE_MODE_BF2=true;
-		}
-		
-		//Ensure out2 is not set without out1
-		if(out1==null && out2!=null){throw new RuntimeException("Error - cannot define out2 without defining out1.");}
-		
+
 		//Adjust interleaved settings based on number of output files
 		if(!setInterleaved){
 			assert(in1!=null && (out1!=null || out2==null)) : "\nin1="+in1+"\nin2="+in2+"\nout1="+out1+"\nout2="+out2+"\n";
@@ -220,31 +286,15 @@ public class AnalyzeFlowCell {
 				}
 			}
 		}
-		
-		//Ensure output files can be written
-		if(!Tools.testOutputFiles(overwrite, append, false, out1, out2, outbad, dump)){
-			outstream.println((out1==null)+", "+(out2==null)+", "+out1+", "+out2+", "+outbad);
-			throw new RuntimeException("\n\noverwrite="+overwrite+"; Can't write to output files "+out1+", "+out2+", "+outbad+", "+dump+"\n");
+	}
+	
+	private static void checkStatics(){
+		//Adjust the number of threads for input file reading
+		if(!ByteFile.FORCE_MODE_BF1 && !ByteFile.FORCE_MODE_BF2 && Shared.threads()>2){
+			ByteFile.FORCE_MODE_BF2=true;
 		}
 		
-		//Ensure input files can be read
-		if(!Tools.testInputFiles(false, true, in1, in2)){
-			throw new RuntimeException("\nCan't read some input files.\n");  
-		}
-		
-		//Ensure that no file was specified multiple times
-		if(!Tools.testForDuplicateFiles(true, in1, in2, out1, out2, outbad, dump)){
-			throw new RuntimeException("\nSome file names were specified multiple times.\n");
-		}
-		
-		//Create output FileFormat objects
-		ffout1=FileFormat.testOutput(out1, FileFormat.FASTQ, extout, true, overwrite, append, false);
-		ffout2=FileFormat.testOutput(out2, FileFormat.FASTQ, extout, true, overwrite, append, false);
-		ffoutbad=FileFormat.testOutput(outbad, FileFormat.FASTQ, extout, true, overwrite, append, false);
-
-		//Create input FileFormat objects
-		ffin1=FileFormat.testInput(in1, FileFormat.FASTQ, extin, true, true);
-		ffin2=FileFormat.testInput(in2, FileFormat.FASTQ, extin, true, true);
+		assert(FastaReadInputStream.settingsOK());
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -273,9 +323,11 @@ public class AnalyzeFlowCell {
 			avgQuality=flowcell.avgQuality;
 			avgUnique=flowcell.avgUnique;
 			avgErrorFree=flowcell.avgErrorFree;
+			avgG=flowcell.avgG;
 			stdQuality=flowcell.stdQuality;
 			stdUnique=flowcell.stdUnique;
 			stdErrorFree=flowcell.stdErrorFree;
+			stdG=flowcell.stdG;
 
 			long readsToDiscard=markTiles(flowcell.toList(), flowcell.avgReads);
 		}
@@ -384,9 +436,11 @@ public class AnalyzeFlowCell {
 
 				String rpstring=Tools.padKM(readsDiscarded, 8);
 				String bpstring=Tools.padKM(basesDiscarded, 8);
+				String gpstring=Tools.padKM(gsTransformedToN, 8);
 				outstream.println();
 				outstream.println("Reads Discarded:    "+rpstring+" \t"+String.format(Locale.ROOT, "%.3f%%", readsDiscarded*100.0/readsProcessed));
 				outstream.println("Bases Discarded:    "+bpstring+" \t"+String.format(Locale.ROOT, "%.3f%%", basesDiscarded*100.0/basesProcessed));
+				if(gToN){outstream.println("Gs Masked By N:     "+gpstring+" \t"+String.format(Locale.ROOT, "%.3f%%", gsTransformedToN*100.0/basesProcessed));}
 				outstream.println();
 			}
 		}
@@ -603,18 +657,9 @@ public class AnalyzeFlowCell {
 							}else{mt.misses++;}
 						}
 					}
-					
-					if(initialLength1>1){
-						mt.qualityCount++;
-						mt.qualitySum+=r1.avgQualityByProbabilityDouble(true, initialLength1);
-						mt.errorFreeSum+=100*r1.probabilityErrorFree(true, initialLength1);
-					}
-					
-					if(initialLength2>=1){
-						mt.qualityCount++;
-						mt.qualitySum+=r2.avgQualityByProbabilityDouble(true, initialLength2);
-						mt.errorFreeSum+=100*r2.probabilityErrorFree(true, initialLength2);
-					}
+
+					mt.add(r1);
+					mt.add(r2);
 				}
 				
 				//Notify the input stream that the list was used
@@ -643,10 +688,12 @@ public class AnalyzeFlowCell {
 		avgQuality=flowcell.avgQuality;
 		avgUnique=flowcell.avgUnique;
 		avgErrorFree=flowcell.avgErrorFree;
+		avgG=flowcell.avgG;
 		
 		stdQuality=flowcell.stdQuality;
 		stdUnique=flowcell.stdUnique;
 		stdErrorFree=flowcell.stdErrorFree;
+		stdG=flowcell.stdG;
 		
 		long readsToDiscard=markTiles(mtList, flowcell.avgReads);
 		
@@ -662,10 +709,12 @@ public class AnalyzeFlowCell {
 			tsw.println("#avgQuality\t"+String.format(Locale.ROOT, "%.3f", avgQuality));
 			tsw.println("#avgUnique\t"+String.format(Locale.ROOT, "%.3f", avgUnique));
 			tsw.println("#avgErrorFree\t"+String.format(Locale.ROOT, "%.3f", avgErrorFree));
+			tsw.println("#avgG\t"+String.format(Locale.ROOT, "%.3f", avgG));
 			
 			tsw.println("#stdQuality\t"+String.format(Locale.ROOT, "%.5f", stdQuality));
 			tsw.println("#stdUnique\t"+String.format(Locale.ROOT, "%.5f", stdUnique));
 			tsw.println("#stdErrorFree\t"+String.format(Locale.ROOT, "%.5f", stdErrorFree));
+			tsw.println("#stdG\t"+String.format(Locale.ROOT, "%.5f", stdG));
 			
 			tsw.println((pound ? "#" : "") + "lane\ttile\tx1\tx2\ty1\ty2\treads\tunique\tquality\tprobErrorFree\tdiscard");
 			
@@ -716,24 +765,58 @@ public class AnalyzeFlowCell {
 		}
 		if(mt.discard<discardLevel){return true;}
 		if(!discardOnlyLowQuality){return false;}
-		
 		int len1=r1.length(), len2=r1.mateLength();
 		if(len1>0){
 			double qual=r1.avgQualityByProbabilityDouble(true, len1);
 			double prob=100*r1.probabilityErrorFree(true, len1);
 			if(qual<avgQuality-qDeviations*stdQuality){return false;}
 			if(prob<avgErrorFree-eDeviations*stdErrorFree){return false;}
+			if(discardG && shouldDiscardG(r1, mt)){return false;}
+			if(gToN){gsTransformedToN+=doGToN(r1, mt);}
 		}
 		if(len2>0){
 			double qual=r2.avgQualityByProbabilityDouble(true, len2);
 			double prob=100*r2.probabilityErrorFree(true, len2);
 			if(qual<avgQuality-qDeviations*stdQuality){return false;}
 			if(prob<avgErrorFree-eDeviations*stdErrorFree){return false;}
+			if(discardG && shouldDiscardG(r2, mt)){return false;}
+			if(gToN){gsTransformedToN+=doGToN(r2, mt);}
 		}
 		return true;
 	}
 	
+	private boolean shouldDiscardG(Read r, MicroTile mt){
+		final byte[] bases=r.bases;
+		final float[] gArray=mt.tracker.cycleAverages[2];
+		
+		final float thresh=(float)(avgG+Tools.max(gDeviations*stdG, avgG*gFraction, gAbs));
+		for(int i=0; i<bases.length; i++){
+			byte b=bases[i];
+			if(b=='G' && gArray[i]>thresh){
+				return true;
+			}
+		}
+		return false;
+	}
 	
+	private int doGToN(Read r, MicroTile mt){
+		final byte[] bases=r.bases;
+		final byte[] quals=r.quality;
+		final float[] gArray=mt.tracker.cycleAverages[2];
+		
+		final float thresh=(float)(avgG+Tools.max(gDeviations*stdG, avgG*gFraction, gAbs));
+		int changes=0;
+		for(int i=0; i<bases.length; i++){
+			byte b=bases[i];
+			if(b=='G' && gArray[i]>thresh){
+				bases[i]='N';
+				changes++;
+				if(quals!=null){quals[i]=0;}
+			}
+		}
+		return changes;
+	}
+		
 	/*--------------------------------------------------------------*/
 	/*----------------        Helper Methods        ----------------*/
 	/*--------------------------------------------------------------*/
@@ -768,21 +851,24 @@ public class AnalyzeFlowCell {
 		}
 		long readsToDiscard=0;
 		
-		cDiscards=qDiscards=eDiscards=uDiscards=mtDiscards=mtRetained=0;
+		cDiscards=qDiscards=eDiscards=uDiscards=mtDiscards=gDiscards=mtRetained=0;
 		
 		for(MicroTile mt : mtList){
 			double q=mt.averageQuality();
 			double e=mt.percentErrorFree();
 			double u=mt.uniquePercent();
+			double g=mt.maxG();
 
 			double dq=avgQuality-q;
 			double de=avgErrorFree-e;
 			double du=u-avgUnique;
+			double dg=g-avgG;
 			
-			if(mt.qualityCount<10 && mt.qualityCount<0.02f*avgReads){
+			if(mt.readCount<10 && mt.readCount<0.02f*avgReads){
 				mt.discard++;
 				cDiscards++;
 			}
+			
 			if(dq>qDeviations*stdQuality && dq>avgQuality*qualFraction && dq>qualAbs){
 				mt.discard++;
 				qDiscards++;
@@ -797,9 +883,30 @@ public class AnalyzeFlowCell {
 					uDiscards++;
 				}
 			}
+			
+			//Or mode
+//			if(dq>qDeviations*stdQuality || dq>avgQuality*qualFraction || dq>qualAbs){
+//				mt.discard++;
+//				qDiscards++;
+//			}
+//			if(de>eDeviations*stdErrorFree || de>avgErrorFree*errorFreeFraction || de>errorFreeAbs){
+//				mt.discard++;
+//				eDiscards++;
+//			}
+//			if(avgUnique>2 && avgUnique<98){
+//				if(du>uDeviations*stdUnique || du>avgUnique*uniqueFraction || du>uniqueAbs){
+//					mt.discard++;
+//					uDiscards++;
+//				}
+//			}
+			
+			if((discardG || gToN) && (dg>gDeviations*stdG && dg>avgG*gFraction && dg>gAbs)){
+				mt.discard++;
+				gDiscards++;
+			}
 			if(mt.discard>0){
 				mtDiscards++;
-				readsToDiscard+=mt.qualityCount;
+				readsToDiscard+=mt.readCount;
 			}
 			else{mtRetained++;}
 		}
@@ -809,6 +916,7 @@ public class AnalyzeFlowCell {
 		outstream.println(uDiscards+" exceeded uniqueness thresholds.");
 		outstream.println(qDiscards+" exceeded quality thresholds.");
 		outstream.println(eDiscards+" exceeded error-free probability thresholds.");
+		outstream.println(gDiscards+" contained G spikes.");
 		outstream.println(cDiscards+" had too few reads to calculate statistics.");
 		outstream.println();
 		
@@ -850,25 +958,30 @@ public class AnalyzeFlowCell {
 	/*--------------------------------------------------------------*/
 
 	/** Number of reads processed */
-	protected long readsProcessed=0;
+	public long readsProcessed=0;
 	/** Number of bases processed */
-	protected long basesProcessed=0;
+	public long basesProcessed=0;
 
 	/** Number of reads discarded */
-	protected long readsDiscarded=0;
+	public long readsDiscarded=0;
 	/** Number of bases discarded */
-	protected long basesDiscarded=0;
+	public long basesDiscarded=0;
 
 	protected long cDiscards=0;
 	protected long uDiscards=0;
 	protected long qDiscards=0;
 	protected long eDiscards=0;
+	protected long gDiscards=0;
 	protected long mtDiscards=0;
 	protected long mtRetained=0;
 	
+	protected long gsTransformedToN=0; 
 	
 	/** Quit after processing this many input reads; -1 means no limit */
 	private long maxReads=-1;
+	
+	/** Whether interleaved was explicitly set. */
+	private boolean setInterleaved=false;
 	
 	/** Hold kmers.  A kmer X such that X%WAYS=Y will be stored in keySets[Y] */
 	private AbstractKmerTable[] keySets;
@@ -890,26 +1003,33 @@ public class AnalyzeFlowCell {
 	private float qDeviations=2f;
 	private float uDeviations=1.5f;
 	private float eDeviations=2f;
+	private float gDeviations=2f;
 	
 	private float qualFraction=0.01f;
 	private float uniqueFraction=0.01f;
 	private float errorFreeFraction=0.01f;
+	private float gFraction=0.1f;
 	
 	private float qualAbs=1f;
 	private float uniqueAbs=1f;
 	private float errorFreeAbs=1f;
+	private float gAbs=0.05f;
 	
 	private double avgQuality;
 	private double avgUnique;
 	private double avgErrorFree;
+	private double avgG;
 	
 	private double stdQuality;
 	private double stdUnique;
 	private double stdErrorFree;
+	private double stdG;
 
 	private boolean loadKmers=true;
 	private boolean discardOnlyLowQuality=true;
 	private int discardLevel=1;
+	private boolean gToN=false;
+	private boolean discardG=false;
 	
 	private int minlen=30;
 	private float trimq=-1;

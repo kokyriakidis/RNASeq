@@ -449,7 +449,7 @@ public class VCFLine implements Comparable<VCFLine> {
 		bb.append(info).append('\t');
 		bb.append(format);
 		for(byte[] sample : samples){
-			bb.append('\t').append(sample);
+			bb.tab().append(sample);
 		}
 		return bb;
 	}

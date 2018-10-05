@@ -759,7 +759,7 @@ illumina_find_common_motifs
 def illumina_find_common_motifs(fastq, log):
     ## Tools
     cdir = os.path.dirname(__file__)
-    patterNFastqPlCmd = os.path.join(cdir, 'patterN_fastq.pl') #RQCReadQcCommands.PATTERN_FASTQ_PL
+    patterNFastqPlCmd = os.path.join(cdir, '../tools/patterN_fastq.pl') #RQCReadQcCommands.PATTERN_FASTQ_PL
 
     sequnitFileName, exitCode = safe_basename(fastq, log)
     sequnitFileNamePrefix = sequnitFileName.replace(".fastq", "").replace(".gz", "")

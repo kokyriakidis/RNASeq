@@ -1,9 +1,9 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 Written by Brian Bushnell and Jonathan Rood
-Last modified June 19, 2018
+Last modified August 23, 2018
 
 Description:  Merges paired reads into single reads by overlap detection.
 With sufficient coverage, can merge nonoverlapping reads by kmer extension.
@@ -73,6 +73,7 @@ trimpolya=t          Trim trailing poly-A tail from adapter output.  Only
 Processing Parameters:
 usejni=f             (jni) Do overlapping in C code, which is faster.  Requires
                      compiling the C code; details are in /jni/README.txt.
+                     However, the jni path is currently disabled.
 merge=t              Create merged reads.  If set to false, you can still 
                      generate an insert histogram.
 ecco=f               Error-correct the overlapping part, but don't merge.
@@ -214,6 +215,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -264,7 +266,8 @@ function merge() {
 		module load java/1.8.0_144
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBMerge $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBMerge $@"
+	local CMD="java $EA $EOOM $z $z2 -cp $CP jgi.BBMerge $@"
 	echo $CMD >&2
 	eval $CMD
 }

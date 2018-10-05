@@ -16,7 +16,7 @@ The recognized compression extensions:
 
 gzip (gz) [can be accelerated by pigz]
 zip
-bz2 [requires bzip2 or pbzip2]
+bz2 [requires bzip2 or pbzip2 or lbzip2]
 fqz [requires fqz_comp]
 
 In order to stream using standard in or standard out, it is recommended to include the format.  For example:

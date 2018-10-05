@@ -184,7 +184,9 @@ public class Seal {
 			}else if(a.equals("tax") || a.equals("taxa") || a.equals("outtax")){
 				outtax=b;
 			}else if(a.equals("ref")){
-				ref=(b==null) ? null : (new File(b).exists() ? new String[] {b} : b.split(","));
+				ref.clear();
+				String[] b2=(b==null) ? null : (new File(b).exists() ? new String[] {b} : b.split(","));
+				for(String b3 : b2){ref.add(b3);}
 			}else if(a.equals("literal")){
 				literal=(b==null) ? null : b.split(",");
 //				assert(false) : b+", "+Arrays.toString(literal);
@@ -334,12 +336,15 @@ public class Seal {
 				storeRefBases=Tools.parseBoolean(b);
 			}
 			
-			else{
+			else if(b==null && new File(arg).exists()){
+				ref.add(arg);
+			}else{
 				throw new RuntimeException("Unknown parameter "+args[i]);
 			}
 		}		
 		
 		if("auto".equals(taxTreeFile)){taxTreeFile=TaxTree.defaultTreeFile();}
+		if(ref.isEmpty()){ref=null;}
 		
 		{//Process parser fields
 			Parser.processQuality();
@@ -411,8 +416,8 @@ public class Seal {
 					temp.add(fname);
 				}
 			}
-			ref=temp.toArray(new String[0]);
-			if(ref.length<1){ref=null;}
+			ref=temp;
+			if(ref.size()<1){ref=null;}
 			refNames.addAll(temp);
 		}
 		
@@ -1041,6 +1046,7 @@ public class Seal {
 		tsw.print(String.format(Locale.ROOT, "#Limits\t%d\t%d\t%d\t%d\n", taxNodeCountLimit, taxNodeNumberLimit, taxNodeMinLevel, taxNodeMaxLevel));
 		tsw.print("#ID\tCount\tPercent\tLevel\tName\n");
 		
+//		assert(false) : taxNodeCountLimit+", "+taxNodeMinLevel+", "+taxNodeMaxLevel;
 		ArrayList<TaxNode> nodes=tree.gatherNodesAtLeastLimit(taxNodeCountLimit, taxNodeMinLevel, taxNodeMaxLevel);
 		
 		for(int i=0, cap=Tools.min(nodes.size(), (taxNodeNumberLimit>0 ? taxNodeNumberLimit : Integer.MAX_VALUE)); i<cap; i++){
@@ -1138,8 +1144,11 @@ public class Seal {
 	 */
 	private long spawnLoadThreads(){
 		Timer t=new Timer();
-		if((ref==null || ref.length<1) && (literal==null || literal.length<1)){return 0;}
+		if((ref==null || ref.size()<1) && (literal==null || literal.length<1)){return 0;}
 		long added=0;
+		
+		final boolean oldParseCustom=FASTQ.PARSE_CUSTOM;
+		FASTQ.PARSE_CUSTOM=false;
 		
 		/* Create load threads */
 		LoadThread[] loaders=new LoadThread[WAYS];
@@ -1404,6 +1413,7 @@ public class Seal {
 			tsw.poisonAndWait();
 		}
 		
+		FASTQ.PARSE_CUSTOM=oldParseCustom;
 		return added;
 	}
 	
@@ -2793,7 +2803,7 @@ public class Seal {
 	/** scaffolds[id] stores the number of kmers in that scaffold */
 	private ArrayList<byte[]> scaffolds=new ArrayList<byte[]>();
 	/** Array of reference files from which to load kmers */
-	private String[] ref=null;
+	private ArrayList<String> ref=new ArrayList<String>();
 	/** Array of literal strings from which to load kmers */
 	private String[] literal=null;
 	/** Taxonomic tree */

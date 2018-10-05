@@ -56,30 +56,29 @@ public class Shaver1 extends Shaver {
 	
 	
 	public boolean exploreAndMark(long kmer, ByteBuilder bb, int[] leftCounts, int[] rightCounts, int minCount, int maxCount,
-			int maxLengthToDiscard, int maxDistanceToExplore, boolean prune
-			, long[][] countMatrixT, long[][] removeMatrixT
-			){
+			int maxLengthToDiscard, int maxDistanceToExplore, boolean prune,
+			long[][] countMatrixT, long[][] removeMatrixT){
 		bb.clear();
 		if(findOwner(kmer)>STATUS_UNEXPLORED){return false;}
 		
 		bb.appendKmer(kmer, k);
-		final int a=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		final int rightCode=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
 		
 		bb.reverseComplementInPlace();
 		kmer=tables.rightmostKmer(bb);
-		final int b=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
+		final int leftCode=explore(kmer, bb, leftCounts, rightCounts, minCount, maxCount, maxDistanceToExplore);
 
-		final int min=Tools.min(a, b);
-		final int max=Tools.max(a, b);
+		final int min=Tools.min(rightCode, leftCode);
+		final int max=Tools.max(rightCode, leftCode);
 		
 		countMatrixT[min][max]++;
 		
-		if(a==TOO_LONG || a==TOO_DEEP || a==LOOP || a==F_BRANCH){
+		if(rightCode==TOO_LONG || rightCode==TOO_DEEP || rightCode==LOOP || rightCode==F_BRANCH){
 			claim(bb, STATUS_EXPLORED, false);
 			return false;
 		}
 		
-		if(b==TOO_LONG || b==TOO_DEEP || b==LOOP || b==F_BRANCH){
+		if(leftCode==TOO_LONG || leftCode==TOO_DEEP || leftCode==LOOP || leftCode==F_BRANCH){
 			claim(bb, STATUS_EXPLORED, false);
 			return false;
 		}
@@ -93,17 +92,17 @@ public class Shaver1 extends Shaver {
 			if(max==DEAD_END || max==B_BRANCH){
 				removeMatrixT[min][max]++;
 				boolean success=claim(bb, STATUS_REMOVE, false);
-				if(verbose || verbose2){System.err.println("Claiming ("+a+","+b+") length "+bb.length()+": "+bb);}
+				if(verbose || verbose2){System.err.println("Claiming ("+rightCode+","+leftCode+") length "+bb.length()+": "+bb);}
 				assert(success);
 				return true;
 			}
 		}
 		
 		if(removeBubbles){
-			if(a==B_BRANCH && b==B_BRANCH){
+			if(rightCode==B_BRANCH && leftCode==B_BRANCH){
 				removeMatrixT[min][max]++;
 				boolean success=claim(bb, STATUS_REMOVE, false);
-				if(verbose || verbose2){System.err.println("Claiming ("+a+","+b+") length "+bb.length()+": "+bb);}
+				if(verbose || verbose2){System.err.println("Claiming ("+rightCode+","+leftCode+") length "+bb.length()+": "+bb);}
 				assert(success);
 				return true;
 			}
@@ -114,8 +113,15 @@ public class Shaver1 extends Shaver {
 	}
 	
 	/** Explores a single unbranching path in the forward direction.
-	 * Returns reason for ending in this direction:
-	 *  DEAD_END, TOO_LONG, TOO_DEEP, F_BRANCH, B_BRANCH */
+	 * @param kmer
+	 * @param bb
+	 * @param leftCounts
+	 * @param rightCounts
+	 * @param minCount
+	 * @param maxCount
+	 * @param maxLength0
+	 * @return A termination code such as DEAD_END
+	 */
 	public int explore(long kmer, ByteBuilder bb, int[] leftCounts, int[] rightCounts, int minCount, int maxCount, int maxLength0){
 		if(verbose){outstream.println("Entering explore with bb.length()="+bb.length());}
 		assert(bb.length()==0 || tables.rightmostKmer(bb)==kmer);
@@ -145,20 +151,20 @@ public class Shaver1 extends Shaver {
 		while(bb.length()<=maxLength){
 			
 			final int rightMaxPos=nextRightMaxPos;
-			final int rightMax=rightCounts[rightMaxPos];
+			final int rightMax=nextRightMax;
 			final int rightSecondPos=Tools.secondHighestPosition(rightCounts);
 			final int rightSecond=rightCounts[rightSecondPos];
+			final int prevCount=count;
+			count=rightMax;
 			
 			if(verbose){
 				outstream.println("kmer: "+toText(kmer, k)+", "+toText(rkmer, k));
-				outstream.println("Right counts: "+count+", "+Arrays.toString(rightCounts));
+				outstream.println("Right counts: "+prevCount+", "+Arrays.toString(rightCounts));
 				outstream.println("rightMaxPos="+rightMaxPos);
 				outstream.println("rightMax="+rightMax);
 				outstream.println("rightSecondPos="+rightSecondPos);
 				outstream.println("rightSecond="+rightSecond);
 			}
-			
-			final int prevCount=count;
 			
 			//Generate the new base
 			final byte b=AminoAcid.numberToBase[rightMaxPos];
@@ -176,7 +182,6 @@ public class Shaver1 extends Shaver {
 			table=tables.getTableForKey(key);
 			
 			assert(table.getValue(key)==rightMax);
-			count=rightMax;
 			
 			{//Fill right and look for dead end
 				nextRightMaxPos=fillRightCounts(kmer, rkmer, rightCounts, mask, shift2);

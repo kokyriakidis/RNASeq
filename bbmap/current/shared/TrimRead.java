@@ -724,7 +724,10 @@ public final class TrimRead implements Serializable {
 		}
 		return trimmed;
 	}
-	
+
+	public int trimmed() {
+		return leftTrimmed+rightTrimmed;
+	}
 	
 	public final Read r;
 	

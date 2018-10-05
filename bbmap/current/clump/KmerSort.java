@@ -70,7 +70,10 @@ public abstract class KmerSort {
 		String rostring=""+readsOut;
 		String bostring=""+basesOut;
 
+		lastReadsIn=readsProcessed;
+		lastBasesIn=basesProcessed;
 		lastReadsOut=readsOut;
+		lastBasesOut=basesOut;
 		
 		while(rpstring2.length()<12){rpstring2=" "+rpstring2;}
 		while(cpstring.length()<12){cpstring=" "+cpstring;}
@@ -522,8 +525,12 @@ public abstract class KmerSort {
 	int reorderMode=REORDER_FALSE;
 	
 	/*--------------------------------------------------------------*/
-	
+
+	public static long lastReadsIn=-1;
+	public static long lastBasesIn=-1;
 	public static long lastReadsOut=-1;
+	public static long lastBasesOut=-1;
+	
 	static boolean quantizeQuality=false;
 	static final int REORDER_FALSE=0, REORDER_CONSENSUS=1, REORDER_PAIRED=2, REORDER_AUTO=3;
 	

@@ -5,9 +5,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -16,6 +16,7 @@ import com.sun.net.httpserver.HttpExchange;
 
 import fileIO.ReadWrite;
 import shared.Tools;
+import structures.ByteBuilder;
 
 public class ServerTools {
 	
@@ -48,44 +49,33 @@ public class ServerTools {
 		
 	}
 	
-	public static String symbolToCode(String s){
-		//See https://en.wikipedia.org/wiki/Percent-encoding
-		assert(false) : "TODO";
-		return s;
-	}
-	
-	//TODO: Use a bytebuilder and parse 1-by-1, to properly handle % itself. Use lookup array with hex codes (assuming these are literal ascii codes?)
-	public static String codeToSymbol(String s){
-		int idx=s.indexOf('%');
-		if(idx<0){return s;}
-		
-		if(s.contains("%20")){//Try space first
-			s=s.replace("%20", " ");
-			idx=s.indexOf('%');
-			if(idx<0){return s;}
-		}
-		
-		for(int i=0; i<reservedCode.length; i++){
-			if(s.contains(reservedCode[i])){
-				s=s.replace(reservedCode[i], reservedSymbol[i]);
-				idx=s.indexOf('%');
-				if(idx<0){return s;}
+	public static ByteBuilder readPage(String address){
+    	address=PercentEncoding.symbolToCode(address);
+		ByteBuilder bb=new ByteBuilder(256);
+        try {
+			URL url=new URL(address);
+			InputStream is=url.openStream();
+			
+			byte[] buffer=new byte[4096];
+			for(int len=is.read(buffer); len>0; len=is.read(buffer)){
+				bb.append(buffer, 0, len);
 			}
+			is.close();
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
-		for(int i=0; i<commonCode.length; i++){
-			if(s.contains(commonCode[i])){
-				s=s.replace(commonCode[i], commonSymbol[i]);
-				idx=s.indexOf('%');
-				if(idx<0){return s;}
-			}
-		}
-		return s;
-	}
+        return bb;
+    }
 	
 	
-	/** Send a message to a remote URL, and return the response */
+	/** Send a message to a remote URL, and return the response.
+	 * Set message to null if there is no message. */
 	public static String sendAndReceive(byte[] message, String address){
+    	address=PercentEncoding.symbolToCode(address);
 		URL url=null;
 		InputStream is=null;
 		HttpURLConnection connection=null;
@@ -243,19 +233,6 @@ public class ServerTools {
 		}
 	}
 	
-	private static HashMap<String, String> makeCodeToSymbolMap() {
-		HashMap<String, String> map=new HashMap<String, String>(129);
-		assert(reservedSymbol.length==reservedCode.length);
-		assert(commonSymbol.length==commonCode.length);
-		for(int i=0; i<reservedSymbol.length; i++){
-			map.put(reservedCode[i], reservedSymbol[i]);
-		}
-		for(int i=0; i<commonSymbol.length; i++){
-			map.put(commonCode[i], commonSymbol[i]);
-		}
-		return map;
-	}
-	
 	public static String getClientAddress(HttpExchange t) {
 		
 		InetSocketAddress client=t.getRemoteAddress();
@@ -331,24 +308,6 @@ public class ServerTools {
 	
 		return false;
 	}
-	
-	public static final String[] reservedSymbol=new String[] {
-		"!", "#", "$", "&", "'", "(", ")", "*", "+", ",", "/", ":", ";", "=", "?", "@", "[", "]"
-	};
-	
-	public static final String[] reservedCode=new String[] {
-		"%21", "%23", "%24", "%26", "%27", "%28", "%29", "%2A", "%2B", "%2C", "%2F", "%3A", "%3B", "%3D", "%3F", "%40", "%5B", "%5D"
-	};
-	
-	public static final String[] commonSymbol=new String[] {
-		"\n", " ", "\"", "%", "<", ">", "\\", "|",
-	};
-	
-	public static final String[] commonCode=new String[] {
-		"%0A", "%20", "%22", "%25", "%3C", "%3E", "%5C", "%7C"
-	};
-	
-	public static final HashMap<String, String> codeToSymbolMap=makeCodeToSymbolMap();
 	
 	/** Don't print caught exceptions */
 	public static boolean suppressErrors=false;

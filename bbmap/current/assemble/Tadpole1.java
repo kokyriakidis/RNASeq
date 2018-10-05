@@ -273,7 +273,7 @@ public class Tadpole1 extends Tadpole {
 			Contig contig=makeContig(key, builderT, true);
 			if(contig!=null){
 				float coverage=tables.calcCoverage(contig);
-				if(coverage<minCoverage){return 0;}
+				if(coverage<minCoverage || coverage>maxCoverage){return 0;}
 				if(verbose){outstream.println("Added "+contig.length());}
 				contig.id=(int)contigNum.incrementAndGet();
 				contigs.add(contig);
@@ -458,9 +458,9 @@ public class Tadpole1 extends Tadpole {
 							return null;
 						}
 					}else if(status==F_BRANCH || status==D_BRANCH){
-						rightRatio=calcRatio(rightCounts);
+						leftRatio=calcRatio(rightCounts);
 					}else if(status==B_BRANCH){
-						rightRatio=calcRatio(leftCounts);
+						leftRatio=calcRatio(leftCounts);
 					}else{
 						throw new RuntimeException("Bad return value: "+status);
 					}
@@ -680,7 +680,9 @@ public class Tadpole1 extends Tadpole {
 					assert(kmer==rcomp(rkmer));
 					assert(tables.getCount(kmer, rkmer)==count) : count+", "+tables.getCount(kmer, rkmer);
 					target=exploreRight(kmer, rkmer, leftCounts, extraCounts);
-					outstream.println(c.id+"R_F: x="+x+", cnt="+count+", dest="+target+", "+codeStrings[lastExitCondition]+", len="+lastLength+", orient="+lastOrientation);
+					if(verbose){
+						outstream.println(c.id+"R_F: x="+x+", cnt="+count+", dest="+target+", "+codeStrings[lastExitCondition]+", len="+lastLength+", orient="+lastOrientation);
+					}
 				}
 				if(target>=0){
 					if(c.rightEdges==null){c.rightEdges=new Edge[4];}

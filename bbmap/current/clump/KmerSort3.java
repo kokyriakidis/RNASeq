@@ -656,8 +656,13 @@ public class KmerSort3 extends KmerSort {
 		}
 		
 		private ArrayList<Read> streamNext_inner(ConcurrentReadInputStream cris){
-			StreamToOutput sto=new StreamToOutput(cris, rosa, kc, (repair || namesort));
+			StreamToOutput sto=new StreamToOutput(cris, rosa, kc, (repair || namesort), false);
 			errorStateT|=sto.process();
+			readsProcessed+=sto.readsIn;
+			basesProcessed+=sto.basesIn;
+			readsOut+=sto.readsIn;
+			basesOut+=sto.basesIn;
+//			System.err.println(readsProcessed+", "+sto.readsIn);
 			return new ArrayList<Read>();
 		}
 		

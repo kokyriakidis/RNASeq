@@ -944,7 +944,7 @@ public class TaxTree implements Serializable{
 			}else if(index==3 && s.length()>4 && s.startsWith("img") && Tools.isDigit(s.charAt(4))){
 //				System.err.println("Parsing ncbi number.");
 				long img=parseDelimitedNumber(s, delimiter);
-				ImgRecord2 record=imgMap.get(img);
+				ImgRecord record=imgMap.get(img);
 				number=(record==null ? -1 : record.taxID);
 			}
 			
@@ -1185,7 +1185,7 @@ public class TaxTree implements Serializable{
 	public TaxNode getNodeAtLevel(int id, int minLevel, int maxLevel){
 		final int minLevelExtended=levelToExtended(minLevel);
 		final int maxLevelExtended=levelToExtended(maxLevel);
-		return getNodeAtLevelExtended(minLevelExtended, maxLevelExtended);
+		return getNodeAtLevelExtended(id, minLevelExtended, maxLevelExtended);
 	}
 	
 	public TaxNode getNodeAtLevelExtended(int id, int minLevelE, int maxLevelE){
@@ -1297,6 +1297,8 @@ public class TaxTree implements Serializable{
 	}
 	
 	public void incrementRaw(int id, long amt){
+		assert(id>=0 && id<nodes.length) : "TaxID "+id+" is out of range."+(id<0 ? "" : "  Possibly the taxonomy data needs to be updated.");
+		assert(nodes[id]!=null) : "No node for TaxID "+id+"; possibly the taxonomy data needs to be updated.";
 		nodes[id].incrementRaw(amt);
 	}
 	
@@ -1335,16 +1337,16 @@ public class TaxTree implements Serializable{
 	public ArrayList<TaxNode> gatherNodesAtLeastLimit(final long limit, final int minLevel, final int maxLevel){
 		final int minLevelExtended=levelToExtended(minLevel);
 		final int maxLevelExtended=levelToExtended(maxLevel);
+//		assert(false) : limit+", "+minLevel+", "+maxLevel+", "+minLevelExtended+", "+maxLevelExtended;
 		ArrayList<TaxNode> list=new ArrayList<TaxNode>();
 		for(int i=minLevelExtended; i<nodesPerLevelExtended.length && i<=maxLevelExtended; i++){
-			list.addAll(gatherNodesAtLeastLimit(i, limit));
+			list.addAll(gatherNodesAtLeastLimitExtended(i, limit));
 		}
 		Shared.sort(list, TaxNode.countComparator);
 		return list;
 	}
 	
-	public ArrayList<TaxNode> gatherNodesAtLeastLimit(final int fromLevel, final long limit){
-		final int fromLevelExtended=levelToExtended(fromLevel);
+	public ArrayList<TaxNode> gatherNodesAtLeastLimitExtended(final int fromLevelExtended, final long limit){
 		ArrayList<TaxNode> list=new ArrayList<TaxNode>();
 		final TaxNode[] stratum=treeLevelsExtended[fromLevelExtended];
 		for(final TaxNode n : stratum){
@@ -1352,7 +1354,7 @@ public class TaxTree implements Serializable{
 				list.add(n);
 				TaxNode parent=nodes[n.pid];
 				if(n!=parent){
-					percolateUp(parent, -n.countSum);
+					percolateUp(parent, -n.countSum);//123 This was negative for some reason
 				}
 			}
 		}
@@ -1543,7 +1545,7 @@ public class TaxTree implements Serializable{
 	/*--------------------------------------------------------------*/
 	
 	public static int imgToNcbi(long img){
-		ImgRecord2 ir=imgMap.get(img);
+		ImgRecord ir=imgMap.get(img);
 //		assert(false) : "\n"+img+"\n"+imgMap.get(img)+"\n"+562+"\n"+imgMap.get(562)+"\n"+imgMap.size()+"\n"+IMGHQ+"\n"+defaultImgFile()+"\n";
 		return ir==null ? -1 : ir.taxID;
 	}
@@ -1553,22 +1555,34 @@ public class TaxTree implements Serializable{
 		return tid<1 ? null : getNode(tid);
 	}
 	
+//	public static int loadIMGOld(String fname, boolean storeName, PrintStream outstream){
+//		assert(imgMap==null);
+//		if(fname==null){return 0;}
+//		ImgRecord2.storeName=storeName;
+//		if(outstream!=null){System.err.println("Loading IMG.");}
+//		Timer t=new Timer(outstream, false);
+//		ImgRecord2[] array=ImgRecord2.toArray(fname);
+//		int x=loadIMG(array);
+//		t.stopAndPrint();
+//		return x;
+//	}
+	
 	public static int loadIMG(String fname, boolean storeName, PrintStream outstream){
 		assert(imgMap==null);
 		if(fname==null){return 0;}
-		ImgRecord2.storeName=storeName;
+		ImgRecord.storeName=storeName;
 		if(outstream!=null){System.err.println("Loading IMG.");}
 		Timer t=new Timer(outstream, false);
-		ImgRecord2[] array=ImgRecord2.toArray(fname);
+		ImgRecord[] array=ImgRecord.toArray(fname, IMG_HQ);
 		int x=loadIMG(array);
 		t.stopAndPrint();
 		return x;
 	}
 	
-	public static int loadIMG(ImgRecord2[] array){
+	public static int loadIMG(ImgRecord[] array){
 		assert(imgMap==null);
-		imgMap=new HashMap<Long, ImgRecord2>((int)(array.length*1.5));
-		for(ImgRecord2 record : array){
+		imgMap=new HashMap<Long, ImgRecord>((int)(array.length*1.5));
+		for(ImgRecord record : array){
 			imgMap.put(record.imgID, record);
 		}
 		return imgMap.size();
@@ -1653,7 +1667,7 @@ public class TaxTree implements Serializable{
 	public static boolean verbose=false;
 	public static boolean SHOW_WARNINGS=false;
 	
-	private static HashMap<Long, ImgRecord2> imgMap;
+	private static HashMap<Long, ImgRecord> imgMap;
 
 	public static boolean ALLOW_SHARED_TREE=true;
 	private static TaxTree sharedTree;
@@ -1814,12 +1828,11 @@ public class TaxTree implements Serializable{
 	public static final String defaultTreeFile(){return defaultTreeFile.replaceAll("TAX_PATH", TAX_PATH);}
 	public static final String defaultAccessionFile(){return defaultAccessionFile.replaceAll("TAX_PATH", TAX_PATH);}
 	public static final String defaultPatternFile(){return defaultPatternFile.replaceAll("TAX_PATH", TAX_PATH);}
-	public static final String defaultImgFile(){return (IMG_HQ ? defaultImgHQFile : defaultImgFile).replaceAll("TAX_PATH", TAX_PATH).replace("/latest/", "/img/");}
+	public static final String defaultImgFile(){return defaultImgFile.replaceAll("TAX_PATH", TAX_PATH);}
 	public static final String defaultSizeFile(){return defaultSizeFile.replaceAll("TAX_PATH", TAX_PATH);} 
 	
 	public static boolean IMG_HQ=false;
-	private static final String defaultImgFile="TAX_PATH/IMG_taxonID_ncbiID_fna.txt";
-	private static final String defaultImgHQFile="TAX_PATH/IMG_taxonID_ncbiID_fna_HQ.txt";
+	private static final String defaultImgFile="TAX_PATH/imgDump.txt";
 	private static final String defaultTableFile="TAX_PATH/gitable.int1d.gz";
 	private static final String defaultTreeFile="TAX_PATH/tree.taxtree.gz";
 	private static final String defaultPatternFile="TAX_PATH/patterns.txt";

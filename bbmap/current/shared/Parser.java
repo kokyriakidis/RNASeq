@@ -222,17 +222,46 @@ public class Parser {
 		}else if(a.equals("trimclip")){
 			trimClip=Tools.parseBoolean(b);
 		}else if(a.equals("trimpolya")){
-			if(b==null){trimPolyA=2;}
-			else if(Tools.isDigit(b.charAt(0))){
-				trimPolyA=Integer.parseInt(b);
-			}else{
-				boolean x=Tools.parseBoolean(b);
-				trimPolyA=x ? 2 : 0;
-			}
-		}else{
+			trimPolyA=parsePoly(b);
+		}
+		
+		else if(a.equals("trimpolyg")){
+			trimPolyGLeft=trimPolyGRight=parsePoly(b);
+		}else if(a.equals("trimpolygleft")){
+			trimPolyGLeft=parsePoly(b);
+		}else if(a.equals("trimpolygright")){
+			trimPolyGRight=parsePoly(b);
+		}else if(a.equals("filterpolyg")){
+			filterPolyG=parsePoly(b);
+		}
+		
+		else if(a.equals("trimpolyc")){
+			trimPolyCLeft=trimPolyCRight=parsePoly(b);
+		}else if(a.equals("trimpolycleft")){
+			trimPolyCLeft=parsePoly(b);
+		}else if(a.equals("trimpolycricht")){
+			trimPolyCRight=parsePoly(b);
+		}else if(a.equals("filterpolyc")){
+			filterPolyC=parsePoly(b);
+		}
+		
+		else{
 			return false;
 		}
 		return true;
+	}
+	
+	public static int parsePoly(String b){
+		int r=2;
+		if(b!=null){
+			if(Tools.isDigit(b.charAt(0))){
+				r=Integer.parseInt(b);
+			}else{
+				boolean x=Tools.parseBoolean(b);
+				r=x ? 2 : 0;
+			}
+		}
+		return r;
 	}
 	
 	public boolean parseTrim(String arg, String a, String b){
@@ -383,6 +412,8 @@ public class Parser {
 			assert(idFilter<=1f) : "idfilter should be between 0 and 1.";
 		}else if(a.equals("subfilter")){
 			subfilter=Integer.parseInt(b);
+		}else if(a.equals("clipfilter")){
+			clipfilter=Integer.parseInt(b);
 		}else if(a.equals("nfilter")){
 			nfilter=Integer.parseInt(b);
 		}else if(a.equals("delfilter")){
@@ -1050,11 +1081,11 @@ public class Parser {
 		final String s=args[args.length-1].toLowerCase();
 		
 		if(s.equals("-version") || s.equals("--version") || (s.equals("version") && !new File(s).exists())){
-			if(autoExit){printHelp(1);}
+			if(autoExit){printHelp(0);}
 			return true;
 		}else if(s.equals("-h") || s.equals("-help") || s.equals("--help")
 				|| s.equals("?") || s.equals("-?") || (s.equals("help") && !new File(s).exists())){
-			if(autoExit){printHelp(1);}
+			if(autoExit){printHelp(0);}
 			return true;
 		}
 		return false;
@@ -1137,6 +1168,14 @@ public class Parser {
 	public boolean qtrimRight=false;
 	public boolean trimClip=false;
 	public int trimPolyA=0;
+	
+	public int trimPolyGLeft=0;
+	public int trimPolyGRight=0;
+	public int filterPolyG=0;
+	
+	public int trimPolyCLeft=0;
+	public int trimPolyCRight=0;
+	public int filterPolyC=0;
 
 	public boolean qtrim1=false;
 	public boolean qtrim2=false;
@@ -1161,6 +1200,7 @@ public class Parser {
 
 	public float idFilter=-1;
 	public int subfilter=-1;
+	public int clipfilter=-1;
 	public int delfilter=-1;
 	public int insfilter=-1;
 	public int indelfilter=-1;

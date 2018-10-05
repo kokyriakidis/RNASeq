@@ -5,6 +5,7 @@ import java.util.Arrays;
 
 import dna.Data;
 import shared.KillSwitch;
+import shared.Shared;
 import shared.Timer;
 import shared.Tools;
 
@@ -254,9 +255,18 @@ public final class ByteFile1 extends ByteFile {
 //						buffer[j]=x[i];
 //					}
 //				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.err.println("open="+open);
+			} catch (IOException e) {//java.io.IOException: Stream Closed
+				//TODO: This should be avoided rather than caught.  It happens when a stream is shut down with e.g. "reads=100".
+				if(!Shared.anomaly){
+					e.printStackTrace();
+					System.err.println("open="+open);
+				}
+			} catch (NullPointerException e) {//Can be thrown by java.util.zip.Inflater.ensureOpen(Inflater.java:389)
+				//TODO: This should be avoided rather than caught.  It happens when a stream is shut down with e.g. "reads=100".
+				if(!Shared.anomaly){
+					e.printStackTrace();
+					System.err.println("open="+open);
+				}
 			}
 			if(r>0){
 				bstop=bstop+r;

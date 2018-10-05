@@ -5,7 +5,8 @@ echo "
 Written by Brian Bushnell
 Last modified May 4, 2017
 
-Description:  Prints the BBTools version.
+Description:  Prints the BBTools version number.
+Add an argument to print the version name too.
 
 Usage:  bbversion.sh
 "

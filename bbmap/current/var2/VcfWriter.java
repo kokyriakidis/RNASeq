@@ -6,6 +6,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import fileIO.ByteStreamWriter;
 import fileIO.FileFormat;
+import prok.GffLine;
 import shared.Shared;
 import shared.Tools;
 import structures.ByteBuilder;
@@ -242,17 +243,17 @@ public class VcfWriter {
 				if(mode==VCFMODE){
 					for(Var v : list){
 						v.toVCF(bb, properPairRate, totalQualityAvg, totalMapqAvg, readLengthAvg, ploidy, scafMap, filter, trimWhitespace);
-						bb.append('\n');
+						bb.nl();
 					}
 				}else if(mode==VARMODE){
 					for(Var v : list){
 						v.toText(bb, properPairRate, totalQualityAvg, totalMapqAvg, readLengthAvg, filter.rarity, ploidy, scafMap);//TODO: Track depth
-						bb.append('\n');
+						bb.nl();
 					}
 				}else if(mode==GFFMODE){
 					for(Var v : list){
 						GffLine.toText(bb, v, properPairRate, totalQualityAvg, totalMapqAvg, readLengthAvg, filter.rarity, ploidy, scafMap);
-						bb.append('\n');
+						bb.nl();
 					}
 				}
 				bsw.add(new ByteBuilder(bb.toBytes()), list.id);

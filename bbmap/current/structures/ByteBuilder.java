@@ -74,7 +74,7 @@ public final class ByteBuilder implements Serializable, CharSequence {
 	}
 	
 	public ByteBuilder appendKmer(Kmer kmer) {
-		return appendKmer(kmer.key(), kmer.k);
+		return appendKmer(kmer.array1(), kmer.k);
 	}
 	
 	public ByteBuilder appendKmer(long[] kmer, int k) {
@@ -460,6 +460,9 @@ public final class ByteBuilder implements Serializable, CharSequence {
 		length++;
 		return this;
 	}
+
+	public ByteBuilder nl(){return append('\n');}
+	public ByteBuilder tab(){return append('\t');}
 	
 	public byte get(int i){
 		assert(i<length);

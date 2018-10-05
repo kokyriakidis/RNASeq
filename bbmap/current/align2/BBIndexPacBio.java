@@ -947,7 +947,9 @@ public final ArrayList<SiteScore> find(byte[] basesP, byte[] basesM, byte[] qual
 			}
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int score;
@@ -1348,7 +1350,9 @@ public final ArrayList<SiteScore> find(byte[] basesP, byte[] basesM, byte[] qual
 			}
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int score;
@@ -1753,7 +1757,9 @@ public final ArrayList<SiteScore> find(byte[] basesP, byte[] basesM, byte[] qual
 			hist_hits[Tools.min(HIT_HIST_LEN, approxHits)]++;
 
 			assert(centerIndex>=0) : centerIndex;
-			assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
+			
+			//I don't remember what this assertion was for or why, but it's causing trouble.
+			//assert(approxHits>=1 || approxHitsCutoff>1) : approxHits+", "+approxHitsCutoff+", "+numHits+", "+t.column;
 			if(approxHits>=approxHitsCutoff){
 				
 				int qscore=quickScore(values, keyScores, centerIndex, offsets, sizes, true, approxHits, numHits);

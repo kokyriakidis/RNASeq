@@ -379,8 +379,8 @@ public class CallPeaks {
 		for(Peak p : peaks){
 			if(p.volume>=minVolume){
 				p.toBytes(bb);
-				if(gcHist!=null){bb.append('\t').append(Tools.mid(0, 1, p.gc*gcmult/p.volume), 3);}
-				bb.append('\n');
+				if(gcHist!=null){bb.tab().append(Tools.mid(0, 1, p.gc*gcmult/p.volume), 3);}
+				bb.nl();
 				bsw.print(bb);
 				bb.setLength(0);
 			}
@@ -1024,13 +1024,13 @@ public class CallPeaks {
 		public ByteBuilder toBytes(ByteBuilder bb){
 			if(bb==null){bb=new ByteBuilder();}
 			bb.append(start);
-			bb.append('\t');
+			bb.tab();
 			bb.append(center);
-			bb.append('\t');
+			bb.tab();
 			bb.append(stop);
-			bb.append('\t');
+			bb.tab();
 			bb.append(maxHeight);
-			bb.append('\t');
+			bb.tab();
 			bb.append(volume);
 			return bb;
 		}

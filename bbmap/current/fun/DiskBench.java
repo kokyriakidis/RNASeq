@@ -195,7 +195,7 @@ public class DiskBench {
 //					x>>=shift;
 //				}
 //			}
-			bb.append('\n');
+			bb.nl();
 			written+=bb.length;
 			bsw.print(bb);
 			bb.clear();
@@ -204,7 +204,7 @@ public class DiskBench {
 			bb.append((byte)(33+(randy.nextInt()&63)));
 			written++;
 		}
-		bb.append('\n');
+		bb.nl();
 		written+=bb.length;
 		bsw.print(bb);
 		bb.clear();

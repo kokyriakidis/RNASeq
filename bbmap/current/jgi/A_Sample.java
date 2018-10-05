@@ -65,14 +65,60 @@ public class A_Sample {
 			outstream=pp.outstream;
 		}
 		
-		//Set shared static variables
-		Shared.capBuffers(4); //Only for singlethreaded programs
+		//Set shared static variables prior to parsing
 		ReadWrite.USE_PIGZ=ReadWrite.USE_UNPIGZ=true;
 		ReadWrite.MAX_ZIP_THREADS=Shared.threads();
+		Shared.capBuffers(4); //Only for singlethreaded programs
+		
+		{//Parse the arguments
+			final Parser parser=parse(args);
+			Parser.processQuality();
+			
+			maxReads=parser.maxReads;
+			overwrite=ReadStats.overwrite=parser.overwrite;
+			append=ReadStats.append=parser.append;
+			setInterleaved=parser.setInterleaved;
+			
+			in1=parser.in1;
+			in2=parser.in2;
+			qfin1=parser.qfin1;
+			qfin2=parser.qfin2;
+			extin=parser.extin;
+
+			out1=parser.out1;
+			out2=parser.out2;
+			qfout1=parser.qfout1;
+			qfout2=parser.qfout2;
+			extout=parser.extout;
+		}
+
+		doPoundReplacement(); //Replace # with 1 and 2
+		adjustInterleaving(); //Make sure interleaving agrees with number of input and output files
+		fixExtensions(); //Add or remove .gz or .bz2 as needed
+		checkFileExistence(); //Ensure files can be read and written
+		checkStatics(); //Adjust file-related static fields as needed for this program 
+		
+		//Create output FileFormat objects
+		ffout1=FileFormat.testOutput(out1, FileFormat.FASTQ, extout, true, overwrite, append, ordered);
+		ffout2=FileFormat.testOutput(out2, FileFormat.FASTQ, extout, true, overwrite, append, ordered);
+
+		//Create input FileFormat objects
+		ffin1=FileFormat.testInput(in1, FileFormat.FASTQ, extin, true, true);
+		ffin2=FileFormat.testInput(in2, FileFormat.FASTQ, extin, true, true);
+	}
+	
+	/*--------------------------------------------------------------*/
+	/*----------------    Initialization Helpers    ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	/** Parse arguments from the command line */
+	private Parser parse(String[] args){
 		
 		//Create a parser object
 		Parser parser=new Parser();
-		boolean setInterleaved=false; //Whether interleaved was explicitly set.
+		
+		//Set any necessary Parser defaults here
+		//parser.foo=bar;
 		
 		//Parse each argument
 		for(int i=0; i<args.length; i++){
@@ -92,87 +138,45 @@ public class A_Sample {
 			}else if(parser.parse(arg, a, b)){//Parse standard flags in the parser
 				//do nothing
 			}else{
-				assert(false) : "Unknown parameter "+args[i];
 				outstream.println("Unknown parameter "+args[i]);
+				assert(false) : "Unknown parameter "+args[i];
 			}
 		}
 		
-		{//Process parser fields
-			Parser.processQuality();
-			
-			maxReads=parser.maxReads;
-			
-			overwrite=ReadStats.overwrite=parser.overwrite;
-			append=ReadStats.append=parser.append;
-			setInterleaved=parser.setInterleaved;
-			
-			in1=parser.in1;
-			in2=parser.in2;
-			qfin1=parser.qfin1;
-			qfin2=parser.qfin2;
-
-			out1=parser.out1;
-			out2=parser.out2;
-			qfout1=parser.qfout1;
-			qfout2=parser.qfout2;
-			
-			extin=parser.extin;
-			extout=parser.extout;
-		}
-		
+		return parser;
+	}
+	
+	/** Replace # with 1 and 2 in headers */
+	private void doPoundReplacement(){
 		//Do input file # replacement
 		if(in1!=null && in2==null && in1.indexOf('#')>-1 && !new File(in1).exists()){
 			in2=in1.replace("#", "2");
 			in1=in1.replace("#", "1");
 		}
-		
-		//Fix file extensions
-		in1=Tools.fixExtension(in1);
-		in2=Tools.fixExtension(in2);
-		qfin1=Tools.fixExtension(qfin1);
-		qfin2=Tools.fixExtension(qfin2);
-//		ref=Tools.fixExtension(ref);
-		
+
 		//Do output file # replacement
 		if(out1!=null && out2==null && out1.indexOf('#')>-1){
 			out2=out1.replace("#", "2");
 			out1=out1.replace("#", "1");
 		}
 		
-		//Adjust interleaved detection based on the number of input files
-		if(in2!=null){
-			if(FASTQ.FORCE_INTERLEAVED){outstream.println("Reset INTERLEAVED to false because paired input files were specified.");}
-			FASTQ.FORCE_INTERLEAVED=FASTQ.TEST_INTERLEAVED=false;
-		}
-		
-		assert(FastaReadInputStream.settingsOK());
-		
 		//Ensure there is an input file
 		if(in1==null){throw new RuntimeException("Error - at least one input file is required.");}
-		
-		//Adjust the number of threads for input file reading
-		if(!ByteFile.FORCE_MODE_BF1 && !ByteFile.FORCE_MODE_BF2 && Shared.threads()>2){
-			ByteFile.FORCE_MODE_BF2=true;
-		}
-		
+
 		//Ensure out2 is not set without out1
 		if(out1==null && out2!=null){throw new RuntimeException("Error - cannot define out2 without defining out1.");}
-		
-		//Adjust interleaved settings based on number of output files
-		if(!setInterleaved){
-			assert(in1!=null && (out1!=null || out2==null)) : "\nin1="+in1+"\nin2="+in2+"\nout1="+out1+"\nout2="+out2+"\n";
-			if(in2!=null){ //If there are 2 input streams.
-				FASTQ.FORCE_INTERLEAVED=FASTQ.TEST_INTERLEAVED=false;
-				outstream.println("Set INTERLEAVED to "+FASTQ.FORCE_INTERLEAVED);
-			}else{ //There is one input stream.
-				if(out2!=null){
-					FASTQ.FORCE_INTERLEAVED=true;
-					FASTQ.TEST_INTERLEAVED=false;
-					outstream.println("Set INTERLEAVED to "+FASTQ.FORCE_INTERLEAVED);
-				}
-			}
-		}
-		
+	}
+	
+	/** Add or remove .gz or .bz2 as needed */
+	private void fixExtensions(){
+		in1=Tools.fixExtension(in1);
+		in2=Tools.fixExtension(in2);
+		qfin1=Tools.fixExtension(qfin1);
+		qfin2=Tools.fixExtension(qfin2);
+	}
+	
+	/** Ensure files can be read and written */
+	private void checkFileExistence(){
 		//Ensure output files can be written
 		if(!Tools.testOutputFiles(overwrite, append, false, out1, out2)){
 			outstream.println((out1==null)+", "+(out2==null)+", "+out1+", "+out2);
@@ -188,14 +192,40 @@ public class A_Sample {
 		if(!Tools.testForDuplicateFiles(true, in1, in2, out1, out2)){
 			throw new RuntimeException("\nSome file names were specified multiple times.\n");
 		}
-		
-		//Create output FileFormat objects
-		ffout1=FileFormat.testOutput(out1, FileFormat.FASTQ, extout, true, overwrite, append, false);
-		ffout2=FileFormat.testOutput(out2, FileFormat.FASTQ, extout, true, overwrite, append, false);
+	}
+	
+	/** Make sure interleaving agrees with number of input and output files */
+	private void adjustInterleaving(){
+		//Adjust interleaved detection based on the number of input files
+		if(in2!=null){
+			if(FASTQ.FORCE_INTERLEAVED){outstream.println("Reset INTERLEAVED to false because paired input files were specified.");}
+			FASTQ.FORCE_INTERLEAVED=FASTQ.TEST_INTERLEAVED=false;
+		}
 
-		//Create input FileFormat objects
-		ffin1=FileFormat.testInput(in1, FileFormat.FASTQ, extin, true, true);
-		ffin2=FileFormat.testInput(in2, FileFormat.FASTQ, extin, true, true);
+		//Adjust interleaved settings based on number of output files
+		if(!setInterleaved){
+			assert(in1!=null && (out1!=null || out2==null)) : "\nin1="+in1+"\nin2="+in2+"\nout1="+out1+"\nout2="+out2+"\n";
+			if(in2!=null){ //If there are 2 input streams.
+				FASTQ.FORCE_INTERLEAVED=FASTQ.TEST_INTERLEAVED=false;
+				outstream.println("Set INTERLEAVED to "+FASTQ.FORCE_INTERLEAVED);
+			}else{ //There is one input stream.
+				if(out2!=null){
+					FASTQ.FORCE_INTERLEAVED=true;
+					FASTQ.TEST_INTERLEAVED=false;
+					outstream.println("Set INTERLEAVED to "+FASTQ.FORCE_INTERLEAVED);
+				}
+			}
+		}
+	}
+	
+	/** Adjust file-related static fields as needed for this program */
+	private static void checkStatics(){
+		//Adjust the number of threads for input file reading
+		if(!ByteFile.FORCE_MODE_BF1 && !ByteFile.FORCE_MODE_BF2 && Shared.threads()>2){
+			ByteFile.FORCE_MODE_BF2=true;
+		}
+		
+		assert(FastaReadInputStream.settingsOK());
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -206,27 +236,10 @@ public class A_Sample {
 	void process(Timer t){
 		
 		//Create a read input stream
-		final ConcurrentReadInputStream cris;
-		{
-			cris=ConcurrentReadInputStream.getReadInputStream(maxReads, true, ffin1, ffin2, qfin1, qfin2);
-			cris.start(); //Start the stream
-			if(verbose){outstream.println("Started cris");}
-		}
-		boolean paired=cris.paired();
-		if(!ffin1.samOrBam()){outstream.println("Input is being processed as "+(paired ? "paired" : "unpaired"));}
+		final ConcurrentReadInputStream cris=makeCris();
 		
 		//Optionally create a read output stream
-		final ConcurrentReadOutputStream ros;
-		if(ffout1!=null){
-			final int buff=4;
-			
-			if(cris.paired() && out2==null && (in1!=null && !ffin1.samOrBam() && !ffout1.samOrBam())){
-				outstream.println("Writing interleaved.");
-			}
-			
-			ros=ConcurrentReadOutputStream.getStream(ffout1, ffout2, qfout1, qfout2, buff, null, false);
-			ros.start(); //Start the stream
-		}else{ros=null;}
+		final ConcurrentReadOutputStream ros=makeCros(cris.paired());
 		
 		//Reset counters
 		readsProcessed=readsOut=0;
@@ -253,6 +266,35 @@ public class A_Sample {
 		}
 	}
 	
+	/*--------------------------------------------------------------*/
+	/*----------------         Inner Methods        ----------------*/
+	/*--------------------------------------------------------------*/
+	
+	private ConcurrentReadInputStream makeCris(){
+		ConcurrentReadInputStream cris=ConcurrentReadInputStream.getReadInputStream(maxReads, true, ffin1, ffin2, qfin1, qfin2);
+		cris.start(); //Start the stream
+		if(verbose){outstream.println("Started cris");}
+		boolean paired=cris.paired();
+		if(!ffin1.samOrBam()){outstream.println("Input is being processed as "+(paired ? "paired" : "unpaired"));}
+		return cris;
+	}
+	
+	private ConcurrentReadOutputStream makeCros(boolean pairedInput){
+		if(ffout1==null){return null;}
+
+		//Select output buffer size based on whether it needs to be ordered
+		final int buff=4;
+
+		//Notify user of output mode
+		if(pairedInput && out2==null && (in1!=null && !ffin1.samOrBam() && !ffout1.samOrBam())){
+			outstream.println("Writing interleaved.");
+		}
+
+		final ConcurrentReadOutputStream ros=ConcurrentReadOutputStream.getStream(ffout1, ffout2, qfout1, qfout2, buff, null, false);
+		ros.start(); //Start the stream
+		return ros;
+	}
+	
 	/** Iterate through the reads */
 	void processInner(final ConcurrentReadInputStream cris, final ConcurrentReadOutputStream ros){
 		
@@ -261,51 +303,21 @@ public class A_Sample {
 		{
 			//Grab the first ListNum of reads
 			ListNum<Read> ln=cris.nextList();
-			//Grab the actual read list from the ListNum
-			ArrayList<Read> reads=(ln!=null ? ln.list : null);
-			
+
 			//Check to ensure pairing is as expected
-			if(reads!=null && !reads.isEmpty()){
-				Read r=reads.get(0);
-				assert((ffin1==null || ffin1.samOrBam()) || (r.mate!=null)==cris.paired());
+			if(ln!=null && !ln.isEmpty()){
+				Read r=ln.get(0);
+				assert(ffin1.samOrBam() || (r.mate!=null)==cris.paired());
 			}
-			
+
 			//As long as there is a nonempty read list...
-			while(ln!=null && reads!=null && reads.size()>0){//ln!=null prevents a compiler potential null access warning
-				if(verbose){outstream.println("Fetched "+reads.size()+" reads.");}
+			while(ln!=null && ln.size()>0){
+//				if(verbose){outstream.println("Fetched "+reads.size()+" reads.");} //Disabled due to non-static access
 				
-				//Loop through each read in the list
-				for(int idx=0; idx<reads.size(); idx++){
-					final Read r1=reads.get(idx);
-					final Read r2=r1.mate;
-					
-					//Track the initial length for statistics
-					final int initialLength1=r1.length();
-					final int initialLength2=r1.mateLength();
-					
-					//Increment counters
-					readsProcessed+=r1.pairCount();
-					basesProcessed+=initialLength1+initialLength2;
-					
-					boolean keep=processReadPair(r1, r2);
-					if(keep){
-						readsOut+=r1.pairCount();
-						basesOut+=r1.pairLength();
-					}else{
-						reads.set(idx, null);
-					}
-				}
-				
-				//Output reads to the output stream
-				if(ros!=null){ros.add(reads, ln.id);}
-				
-				//Notify the input stream that the list was used
-				cris.returnList(ln);
-				if(verbose){outstream.println("Returned a list.");}
-				
+				processList(ln, cris, ros);
+
 				//Fetch a new list
 				ln=cris.nextList();
-				reads=(ln!=null ? ln.list : null);
 			}
 			
 			//Notify the input stream that the final list was used
@@ -318,9 +330,54 @@ public class A_Sample {
 		
 	}
 	
-	/*--------------------------------------------------------------*/
-	/*----------------         Inner Methods        ----------------*/
-	/*--------------------------------------------------------------*/
+	/**
+	 * Process a list of Reads.
+	 * @param ln The list.
+	 * @param cris Read Input Stream
+	 * @param ros Read Output Stream for reads that will be retained
+	 */
+	void processList(ListNum<Read> ln, final ConcurrentReadInputStream cris, final ConcurrentReadOutputStream ros){
+
+		//Grab the actual read list from the ListNum
+		final ArrayList<Read> reads=ln.list;
+		
+		//Loop through each read in the list
+		for(int idx=0; idx<reads.size(); idx++){
+			final Read r1=reads.get(idx);
+			final Read r2=r1.mate;
+			
+			//Validate reads in worker threads
+			if(!r1.validated()){r1.validate(true);}
+			if(r2!=null && !r2.validated()){r2.validate(true);}
+
+			//Track the initial length for statistics
+			final int initialLength1=r1.length();
+			final int initialLength2=r1.mateLength();
+
+			//Increment counters
+			readsProcessed+=r1.pairCount();
+			basesProcessed+=initialLength1+initialLength2;
+			
+			{
+				//Reads are processed in this block.
+				boolean keep=processReadPair(r1, r2);
+				
+				if(!keep){reads.set(idx, null);}
+				else{
+					readsOut+=r1.pairCount();
+					basesOut+=r1.pairLength();
+				}
+			}
+		}
+
+		//Output reads to the output stream
+		if(ros!=null){ros.add(reads, ln.id);}
+
+		//Notify the input stream that the list was used
+		cris.returnList(ln);
+//		if(verbose){outstream.println("Returned a list.");} //Disabled due to non-static access
+	}
+	
 	
 	/**
 	 * Process a single read pair.
@@ -356,6 +413,9 @@ public class A_Sample {
 	private String extin=null;
 	/** Override output file extension */
 	private String extout=null;
+	
+	/** Whether interleaved was explicitly set. */
+	private boolean setInterleaved=false;
 	
 	/*--------------------------------------------------------------*/
 

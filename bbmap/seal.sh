@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified May 31, 2018
+Last modified August 30, 2018
 
 Description:  Performs high-speed alignment-free sequence quantification,
 by counting the number of long kmers that match between a read and
@@ -20,8 +20,9 @@ Input parameters:
 in=<file>           Main input. in=stdin.fq will pipe from stdin.
 in2=<file>          Input for 2nd read of pairs in a different file.
 ref=<file,file>     Comma-delimited list of reference files or directories.
+                    Filenames may also be used without ref=, e.g. *.fa.
                     In addition to filenames, you may also use the keywords:
-                    adapters, artifacts, phix, lambda, pjet, mtst, kapa
+                    adapters, artifacts, phix, lambda, pjet, mtst, kapa.
 literal=<seq,seq>   Comma-delimited list of literal reference sequences.
 touppercase=f       (tuc) Change all bases upper-case.
 interleaved=auto    (int) t/f overrides interleaved autodetection.
@@ -168,7 +169,7 @@ restrictright=0     If positive, only look for kmer matches in the
 Java Parameters:
 -Xmx                This will be passed to Java to set memory usage, overriding 
                     the program's automatic memory detection. -Xmx20g will 
-		    specify 20 gigs of RAM, and -Xmx200m will specify 200 megs.  
+		      specify 20 gigs of RAM, and -Xmx200m will specify 200 megs.  
                     The max is typically 85% of physical memory.
 -eoom               This flag will cause the process to exit if an 
                     out-of-memory exception occurs.  Requires Java 8u92+.
@@ -178,6 +179,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "	
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

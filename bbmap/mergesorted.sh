@@ -3,14 +3,14 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified May 2, 2018
+Last modified September 12, 2018
 
 Description:  Sorts reads by name or other keys such as length,
 quality, mapping position, flowcell coordinates, or taxonomy.
 Intended to merge temp files produced by SortByName if the program
 ran out of time during merging.
 
-Usage:   sortbyname.sh sort_temp* out=<file>
+Usage:   mergesorted.sh sort_temp* out=<file>
 
 Input may be fasta, fastq, or sam, compressed or uncompressed.
 
@@ -51,6 +51,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -87,7 +88,7 @@ calcXmx () {
 }
 calcXmx "$@"
 
-sortbyname() {
+mergesorted() {
 	if [[ $SHIFTER_RUNTIME == 1 ]]; then
 		#Ignore NERSC_HOST
 		shifter=1
@@ -111,4 +112,4 @@ sortbyname() {
 	eval $CMD
 }
 
-sortbyname "$@"
+mergesorted "$@"

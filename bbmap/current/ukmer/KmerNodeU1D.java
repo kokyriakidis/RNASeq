@@ -121,7 +121,7 @@ public class KmerNodeU1D extends KmerNodeU {
 		if(value<1){return true;}
 		if(value>=mincount){
 			toBytes(pivot, value, k, bb);
-			bb.append('\n');
+			bb.nl();
 			if(bb.length()>=16000){
 				ByteBuilder bb2=new ByteBuilder(bb);
 				synchronized(bsw){bsw.addJob(bb2);}

@@ -2,7 +2,7 @@
 set -e
 
 #Written by Brian Bushnell
-#Last updated February 21, 2018
+#Last updated September 18, 2018
 
 #This script is designed to preprocess data for assembly of overlapping 2x150bp reads from Illumina HiSeq 2500.
 #Some numbers and steps may need adjustment for different data types or file paths.
@@ -86,14 +86,14 @@ bbduk.sh in=unmerged.fq.gz out=qtrimmed.fq.gz qtrim=r trimq=10 minlen=70 ordered
 
 # --- Assembly ---
 
-#You do not need to assemble with all assemblers, but I jave listed the commands for the 3 I use most often
+#You do not need to assemble with all assemblers, but I have listed the commands for the 3 I use most often
 
 #Assemble with Tadpole
 #For very large datasets, "prefilter=1" or "prefilter=2" can be added to conserve memory.
 tadpole.sh in=merged.fq.gz,qtrimmed.fq.gz out=tadpole_contigs.fa k=124
 
 #Or assemble with TadWrapper (which automatically finds the best value of K but takes longer)
-tadwrapper.sh in=merged.fq.gz,qtrimmed.fq.gz out=tadwrapper_contigs_%.fa outfinal=tadwrapper_contigs k=62,124,217 bisect
+tadwrapper.sh in=merged.fq.gz,qtrimmed.fq.gz out=tadwrapper_contigs_%.fa outfinal=tadwrapper_contigs k=40,124,217 bisect
 
 #Assemble with Spades
 spades.py -k 25,55,95,125 --phred-offset 33 -s merged.fq.gz --12 qtrimmed.fq.gz -o spades_out
@@ -112,8 +112,11 @@ quast.py -f -o quast -R ref.fa tadpole_contigs.fa spades_out/scaffolds.fasta meg
 
 #Pick which assembly you like best
 
-#Determine the taxonomic makeup of the assembly
+#Determine the overall taxonomic makeup of the assembly
 sendsketch.sh in=tadpole_contigs.fa
+
+#Or, try to determine taxonomy on a per-contig basis.  If this is not sensitive enough, try BLAST instead.
+sendsketch.sh in=tadpole_contigs.fa persequence minhits=1 records=4
 
 #Calculate the coverage distribution, and capture reads that did not make it into the assembly
 bbmap.sh in=filtered.fq.gz ref=tadpole_contigs.fa nodisk covhist=covhist.txt covstats=covstats.txt outm=assembled.fq.gz outu=unassembled.fq.gz maxindel=200 minid=90 qtrim=10 untrim ambig=all

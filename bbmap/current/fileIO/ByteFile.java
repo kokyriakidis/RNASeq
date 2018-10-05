@@ -14,6 +14,11 @@ public abstract class ByteFile {
 //		return makeByteFile(fname, false, true);
 //	}
 	
+	public static final ByteFile makeByteFile1(String fname, boolean allowSubprocess){
+		FileFormat ff=FileFormat.testInput(fname, FileFormat.TEXT, null, allowSubprocess, false);
+		return new ByteFile1(ff);
+	}
+	
 	public static final ByteFile makeByteFile(String fname, boolean allowSubprocess){
 		FileFormat ff=FileFormat.testInput(fname, FileFormat.TEXT, null, allowSubprocess, false);
 		return makeByteFile(ff);

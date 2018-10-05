@@ -1,9 +1,9 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 Written by Brian Bushnell
-Last modified July 11, 2018
+Last modified August 29, 2018
 
 Description:  Reformats reads to change ASCII quality encoding, interleaving, file format, or compression format.
 Optionally performs additional functions such as quality trimming, subsetting, and subsampling.
@@ -147,7 +147,9 @@ stoptag=f               Set to true to write a tag indicating read stop location
 sam=                    Set to 'sam=1.3' to convert '=' and 'X' cigar symbols (from sam 1.4+ format) to 'M'.
                         Set to 'sam=1.4' to convert 'M' to '=' and 'X' (sam=1.4 requires MD tags to be present, or ref to be specified).
 
-Sam and bam alignment filtering options (require sam format 1.4 or higher, or MD tags, or reference fasta):
+Sam and bam alignment filtering options:
+These require = and X symbols in cigar strings, or MD tags, or areference fasta.
+-1 means disabled; to filter reads with any of a symbol type, set to 0.
 
 subfilter=-1            Discard reads with more than this many substitutions.
 insfilter=-1            Discard reads with more than this many insertions.
@@ -157,6 +159,7 @@ editfilter=-1           Discard reads with more than this many edits.
 inslenfilter=-1         Discard reads with an insertion longer than this.
 dellenfilter=-1         Discard reads with a deletion longer than this.
 idfilter=-1.0           Discard reads with identity below this.
+clipfilter=-1           Discard reads with more than this many soft-clipped bases.
 
 Kmer counting and cardinality estimation:
 k=0                     If positive, count the total number of kmers.
@@ -180,6 +183,7 @@ Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -220,6 +224,7 @@ function reformat() {
 		module load pigz
 	elif [[ $NERSC_HOST == denovo ]]; then
 		module unload java
+		module unload oracle-jdk
 		module load java/1.8.0_144
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
@@ -229,6 +234,7 @@ function reformat() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz

@@ -25,6 +25,17 @@ public class Blacklist extends SketchObject {
 	}
 	
 	private static ArrayList<Sketch> addFile(String fname){
+		if(!new File(fname).exists()){
+			if("nt".equalsIgnoreCase(fname)){
+				fname=Blacklist.ntBlacklist();
+			}else if(("silva".equalsIgnoreCase(fname) || "ribo".equalsIgnoreCase(fname))){
+				fname=Blacklist.silvaBlacklist();
+			}else if("refseq".equalsIgnoreCase(fname)){
+				fname=Blacklist.refseqBlacklist();
+			}else if("img".equalsIgnoreCase(fname)){
+				fname=Blacklist.imgBlacklist();
+			}
+		}
 		System.err.println("Adding "+fname+" to blacklist.");
 		assert(!added.contains(fname));
 		added.add(fname);
@@ -67,7 +78,7 @@ public class Blacklist extends SketchObject {
 		return keySets!=null;
 	}
 
-	static synchronized String ntBlacklist(){return ntBlacklist!=null ? ntBlacklist : (ntBlacklist=Data.findPath("?blacklist_nt_species_1000.sketch"));}
+	static synchronized String ntBlacklist(){return ntBlacklist!=null ? ntBlacklist : (ntBlacklist=Data.findPath("?blacklist_nt_species_500.sketch"));}
 	static synchronized String silvaBlacklist(){return silvaBlacklist!=null ? silvaBlacklist : (silvaBlacklist=Data.findPath("?blacklist_silva_species_500.sketch"));}
 	static synchronized String refseqBlacklist(){return refseqBlacklist!=null ? refseqBlacklist : (refseqBlacklist=Data.findPath("?blacklist_refseq_species_250.sketch"));}
 	static synchronized String imgBlacklist(){return imgBlacklist!=null ? imgBlacklist : (imgBlacklist=Data.findPath("?blacklist_img_species_300.sketch"));}

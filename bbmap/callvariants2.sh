@@ -1,11 +1,17 @@
 #!/bin/bash
 
 #Running callvariants2.sh is equivalent to running callvariants.sh with the "multi" flag.
+#See callvariants.sh for usage information.
+
+#callvariants2 is intended for multiple sam/bam files, one from each sample, which should have variants called independently; the point is that allele frequencies will be reported for ALL samples at locations where ANY sample has a variant called.
+#callvariants2 is NOT a better version of callvariants, it's the same, just designed for multisample processing.
+#If you have only 1 sample (regardless of how many sam/bam files there are) you should use callvariants.sh without the "multi" flag.
 
 usage(){
 bash "$DIR"callvariants.sh
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -62,6 +68,7 @@ callvariants2() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz

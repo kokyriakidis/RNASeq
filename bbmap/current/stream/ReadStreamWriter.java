@@ -146,7 +146,7 @@ public abstract class ReadStreamWriter extends Thread {
 					}else{
 						ByteBuilder bb=new ByteBuilder(4096);
 						SamHeader.header0B(bb);
-						bb.append('\n');
+						bb.nl();
 						int a=(MINCHROM==-1 ? 1 : MINCHROM);
 						int b=(MAXCHROM==-1 ? Data.numChroms : MAXCHROM);
 						if(!supressHeaderSequences){
@@ -155,7 +155,7 @@ public abstract class ReadStreamWriter extends Thread {
 							}
 						}
 						SamHeader.header2B(bb);
-						bb.append('\n');
+						bb.nl();
 
 
 						try {
@@ -286,7 +286,7 @@ public abstract class ReadStreamWriter extends Thread {
 			if(len>0){bb.append((int)quals[0]);}
 			for(int i=1, w=1; i<len; i++, w++){
 				if(w>=wrap){
-					bb.append('\n');
+					bb.nl();
 					w=0;
 				}else{
 					bb.append(' ');
@@ -309,7 +309,7 @@ public abstract class ReadStreamWriter extends Thread {
 			if(len>0){bb.append(q);}
 			for(int i=1, w=1; i<len; i++, w++){
 				if(w>=wrap){
-					bb.append('\n');
+					bb.nl();
 					w=0;
 				}else{
 					bb.append(' ');

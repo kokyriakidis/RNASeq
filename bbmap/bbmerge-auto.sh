@@ -1,6 +1,6 @@
 #!/bin/bash
 
-function usage(){
+usage(){
 echo "
 bbmerge-auto.sh is a wrapper for BBMerge that attempts to use all available
 memory, instead of a fixed amount.  This is for use with the Tadpole options
@@ -12,6 +12,7 @@ For information about usage and parameters, please run bbmerge.sh.
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -68,7 +69,8 @@ function merge() {
 		module load java/1.8.0_144
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBMerge $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z $z2 -cp $CP jgi.BBMerge $@"
+	local CMD="java $EA $z $z2 -cp $CP jgi.BBMerge $@"
 	echo $CMD >&2
 	eval $CMD
 }

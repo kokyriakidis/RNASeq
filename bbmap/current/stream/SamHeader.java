@@ -177,7 +177,7 @@ public class SamHeader {
 				//				sb.append("\tLN:"+Tools.min(Integer.MAX_VALUE, (Data.scaffoldLengths[i][j]+1000L)));
 				//				sb.append("\tAS:"+((Data.name==null ? "" : Data.name+" ")+"b"+Data.GENOME_BUILD).replace('\t', ' '));
 
-				bb.append('\n');
+				bb.nl();
 
 				if(bb.length>=32768){
 					try {

@@ -423,25 +423,29 @@ public final class BBMap extends AbstractMapper {
 		if(makeBloomFilter){
 			String serialPath=RefToIndex.bloomLoc(build);
 			File serialFile=new File(serialPath);
+//			System.err.println(serialPath+", "+serialFile.exists()+", "+bloomSerial+", "+RefToIndex.NODISK);
 			if(bloomSerial && !RefToIndex.NODISK && serialFile.exists()){
 				bloomFilter=ReadWrite.read(BloomFilter.class, RefToIndex.bloomLoc(build), true);
+				t.stop("Loaded Bloom Filter: ");
 			}else{
 				if(bloomSerial){System.out.println("Could not read "+serialPath+", generating filter from reference.");}
 				bloomFilter=new BloomFilter(true, bloomFilterK, 1, bloomFilterHashes, bloomFilterMinHits, true);
+				t.stop("Made Bloom Filter: ");
 				if(bloomSerial && !RefToIndex.NODISK && !RefToIndex.FORCE_READ_ONLY){
 //					 && serialFile.canWrite()
 					try {
 						ReadWrite.writeObjectInThread(bloomFilter, serialPath, true);
+						outstream.println("Writing Bloom Filter.");
 					} catch (Throwable e) {
 						e.printStackTrace();
+						outstream.println("Can't Write Bloom Filter.");
 					}
 				}
 			}
-				
-			t.stop("Made Bloom Filter: ");
 			outstream.println(bloomFilter.filter.toShortString());
 			t.start();
 		}
+//		assert(false) : makeBloomFilter;
 //		assert(false) : RefToIndex.chrombits+", "+AbstractIndex.CHROMS_PER_BLOCK;
 	}
 		

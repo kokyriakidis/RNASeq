@@ -38,6 +38,7 @@ import stream.SamLine;
 import structures.EntropyTracker;
 import structures.IntList;
 import structures.ListNum;
+import structures.PolymerTracker;
 import var2.CallVariants;
 import var2.ScafMap;
 import var2.Var;
@@ -122,6 +123,7 @@ public class BBDukF {
 		parser.minLenFraction=0f;
 		parser.requireBothBad=false;
 		parser.maxNs=-1;
+		parser.overwrite=overwrite;
 		boolean trimByOverlap_=false, useQualityForOverlap_=false, strictOverlap_=true;
 		boolean trimPairsEvenly_=false;
 		boolean ordered_=false;
@@ -195,6 +197,8 @@ public class BBDukF {
 				outsingle=b;
 			}else if(a.equals("stats") || a.equals("scafstats")){
 				outstats=b;
+			}else if(a.equals("polymerstats") || a.equals("polymerstatsfile") || a.equals("pstats") || a.equals("phist")){
+				polymerStatsFile=b;
 			}else if(a.equals("refstats")){
 				outrefstats=b;
 			}else if(a.equals("rpkm") || a.equals("fpkm") || a.equals("cov") || a.equals("coverage")){
@@ -410,7 +414,37 @@ public class BBDukF {
 				}else{
 					entropyMask=Tools.parseBoolean(b);
 				}
-			}else if(a.equals("minbasefrequency")){
+			}else if(a.equals("entropymark") || a.equals("markentropy")){
+				entropyMark=Tools.parseBoolean(b);
+			}
+			
+			else if(a.equals("countpolymers")){
+				countPolymers=Tools.parseBoolean(b);
+			}else if(a.equals("polybase1")){
+				polymerChar1=(byte)b.charAt(0);
+			}else if(a.equals("polybase2")){
+				polymerChar2=(byte)b.charAt(0);
+			}else if(a.equals("polymerratio") || a.equals("pratio")){
+				assert(b!=null);
+				b=b.toUpperCase();
+				if(b.length()==2){
+					polymerChar1=(byte)b.charAt(0);
+					polymerChar2=(byte)b.charAt(1);
+				}else if(b.length()==3){
+					assert(b.charAt(1)==',');
+					polymerChar1=(byte)b.charAt(0);
+					polymerChar2=(byte)b.charAt(2);
+				}else{
+					assert(false) : "Format should be pratio=G,C";
+				}
+				assert(polymerChar1>=0 && polymerChar2>=0);
+				assert(AminoAcid.baseToNumberACGTN[polymerChar1]>=0 && AminoAcid.baseToNumberACGTN[polymerChar2]>=0) : "Only ACGTN polymer tracking is possible: "+arg;
+			}else if(a.equals("polymerlength") || a.equals("plen")){
+				polymerLength=Integer.parseInt(b);
+				assert(polymerLength>=1);
+			}
+			
+			else if(a.equals("minbasefrequency")){
 				minBaseFrequency_=Float.parseFloat(b);
 			}else if(a.equals("ecco") || a.equals("ecc")){
 				ecc_=Tools.parseBoolean(b);
@@ -499,6 +533,12 @@ public class BBDukF {
 			qtrimRight=parser.qtrimRight && trimE<1;
 			trimClip=parser.trimClip;
 			trimPolyA=parser.trimPolyA;
+			trimPolyGLeft=parser.trimPolyGLeft;
+			trimPolyGRight=parser.trimPolyGRight;
+			filterPolyG=parser.filterPolyG;
+			trimPolyCLeft=parser.trimPolyCLeft;
+			trimPolyCRight=parser.trimPolyCRight;
+			filterPolyC=parser.filterPolyC;
 			minLenFraction=parser.minLenFraction;
 			minAvgQuality=parser.minAvgQuality;
 			minAvgQualityBases=parser.minAvgQualityBases;
@@ -794,7 +834,7 @@ public class BBDukF {
 		qfin2=Tools.fixExtension(qfin2);
 		ref=Tools.fixExtension(ref);
 		
-		if(!Tools.testOutputFiles(overwrite, append, false, out1, out2, qfout1, qfout2, outb1, outb2, outsingle, outstats, outrpkm, outduk, outrqc, outrefstats)){
+		if(!Tools.testOutputFiles(overwrite, append, false, out1, out2, qfout1, qfout2, outb1, outb2, outsingle, outstats, outrpkm, outduk, outrqc, outrefstats, polymerStatsFile)){
 			throw new RuntimeException("\nCan't write to some output files; overwrite="+overwrite+"\n");
 		}
 		if(!Tools.testInputFiles(false, true, in1, in2, qfin1, qfin2)){
@@ -804,7 +844,7 @@ public class BBDukF {
 			throw new RuntimeException("\nCan't read to some reference files.\n");
 		}
 		if(!Tools.testForDuplicateFiles(true, in1, in2, qfin1, qfin2, qfout1, qfout2,
-				out1, out2, outb1, outb2, outsingle, outstats, outrpkm, outduk, outrqc, outrefstats)){
+				out1, out2, outb1, outb2, outsingle, outstats, outrpkm, outduk, outrqc, outrefstats, polymerStatsFile)){
 			throw new RuntimeException("\nSome file names were specified multiple times.\n");
 		}
 		
@@ -827,10 +867,12 @@ public class BBDukF {
 		
 		makeReadStats=ReadStats.collectingStats();
 		
+		//This block just causes problems when new features are added, so it's disabled.
 		if(!((ref!=null || literal!=null) || qtrimLeft || qtrimRight || minAvgQuality>0 || minBaseQuality>0 || maxNs>=0 || trimByOverlap ||
-				makeReadStats || entropyMask || entropyCutoff>0 || filterVars ||
-				forceTrimLeft>0 || forceTrimRight>0 || forceTrimRight2>0 || forceTrimModulo>0 || minBaseFrequency>0 || recalibrateQuality || trimPolyA>0)){
-			outstream.println("NOTE: No reference files specified, no trimming mode, no min avg quality, no histograms - read sequences will not be changed.");
+				makeReadStats || entropyMask || entropyMark || entropyCutoff>0 || filterVars ||
+				forceTrimLeft>0 || forceTrimRight>0 || forceTrimRight2>0 || forceTrimModulo>0 || minBaseFrequency>0 || recalibrateQuality || 
+				trimPolyA>0 || trimPolyGLeft>0 || trimPolyGRight>0 || filterPolyG>0 || trimPolyCLeft>0 || trimPolyCRight>0 || filterPolyC>0)){
+//			outstream.println("NOTE: No reference files specified, no trimming mode, no min avg quality, no histograms - read sequences will not be changed.");
 		}
 		
 		if(recalibrateQuality || true){
@@ -852,25 +894,24 @@ public class BBDukF {
 		keySets=AbstractKmerTable.preallocate(WAYS, tableType, schedule, -1L);
 		
 		//Initialize entropy
-		calcEntropy=(entropyCutoff>0);
+		calcEntropy=(entropyCutoff>0 || entropyMark);
 		if(calcEntropy){
-			assert(entropyWindowBases>0 && entropyCutoff>=0 && entropyCutoff<=1);
-			entropy=new double[entropyWindowBases+2];
-			final double mult=1d/entropyWindowBases;
-			for(int i=0; i<entropy.length; i++){
-				double pk=i*mult;
-				entropy[i]=pk*Math.log(pk);
-			}
-			entropyMult=-1/Math.log(entropyWindowBases);
-			entropyKmerspace=(1<<(2*entropyK));
-			
-//			assert(false) : "\n"+entropyMult+"\n"+entropyWindow+"\n"+entropyKmerspace+"\n"+Arrays.toString(entropy);
-		}else{
-			entropy=null;
-			entropyMult=0;
-			entropyKmerspace=1;
+			assert(entropyWindowBases>0 && (entropyMark || (entropyCutoff>=0 && entropyCutoff<=1)));
 		}
-		assert(calcEntropy || !entropyMask) : "Entropy-masking requires the entropy flag to be set.";
+		assert(calcEntropy || (!entropyMask && !entropyMark)) : "Entropy-masking requires the entropy flag to be set.";
+		
+		if(polymerStatsFile!=null || (polymerChar1>=0 && polymerChar2>=0)){
+			countPolymers=true;
+		}
+		
+		//Initialize polymer-tracking
+		if(countPolymers){
+			assert(polymerChar1>=0 && AminoAcid.baseToNumberACGTN[polymerChar1]>=0);
+			assert(polymerChar2>=0 && AminoAcid.baseToNumberACGTN[polymerChar2]>=0);
+			pTracker=new PolymerTracker();
+		}else{
+			pTracker=null;
+		}
 	}
 
 	
@@ -1024,6 +1065,9 @@ public class BBDukF {
 		writeRPKM();
 		writeRefStats();
 		writeRqc();
+		if(pTracker!=null && polymerStatsFile!=null){
+			ReadWrite.writeString(pTracker.toHistogramCumulative(), polymerStatsFile);
+		}
 		
 		/* Unload sequence data to save memory */
 		if(RELEASE_TABLES){unloadScaffolds();}
@@ -1039,8 +1083,8 @@ public class BBDukF {
 			outstream.println("QTrimmed:               \t"+readsQTrimmed+" reads ("+toPercent(readsQTrimmed, readsIn)+") \t"+
 					basesQTrimmed+" bases ("+toPercent(basesQTrimmed, basesIn)+")");
 		}
-		if(trimPolyA>0){
-			outstream.println("Poly-A:                 \t"+readsPolyTrimmed+" reads ("+toPercent(readsPolyTrimmed, readsIn)+") \t"+
+		if(trimPolyA>0 || trimPolyGLeft>0 || trimPolyGRight>0 || filterPolyG>0 || trimPolyCLeft>0 || trimPolyCRight>0 || filterPolyC>0){
+			outstream.println("Polymer-trimmed:        \t"+readsPolyTrimmed+" reads ("+toPercent(readsPolyTrimmed, readsIn)+") \t"+
 					basesPolyTrimmed+" bases ("+toPercent(basesPolyTrimmed, basesIn)+")");
 		}
 		if(forceTrimLeft>0 || forceTrimRight>0 || forceTrimRight2>0 || forceTrimModulo>0){
@@ -1067,6 +1111,11 @@ public class BBDukF {
 		if(minAvgQuality>0 || minBaseQuality>0 || maxNs>=0 || minBaseFrequency>0 || chastityFilter || removeBadBarcodes){
 			outstream.println("Low quality discards:   \t"+readsQFiltered+" reads ("+toPercent(readsQFiltered, readsIn)+") \t"+
 					basesQFiltered+" bases ("+toPercent(basesQFiltered, basesIn)+")");
+		}
+		if(polymerChar1>=0 && polymerChar2>=0){
+			outstream.println("Polymer Counts:         \t"+padRight(pTracker.getCountCumulative(polymerChar1, polymerLength)+" "+Character.toString((char)polymerChar1), 18)+"\t"+
+					padRight(pTracker.getCountCumulative(polymerChar2, polymerLength)+" "+Character.toString((char)polymerChar2), 18)+"\t"+
+					"("+String.format(Locale.ROOT, "%.4f", pTracker.calcRatioCumulative(polymerChar1, polymerChar2, polymerLength))+" ratio)");
 		}
 		if(calcEntropy){
 			String prefix;
@@ -1099,6 +1148,11 @@ public class BBDukF {
 	private static String toPercent(long numerator, long denominator){
 		if(denominator<1){return "0.00%";}
 		return String.format(Locale.ROOT, "%.2f%%",numerator*100.0/denominator);
+	}
+	
+	private static String padRight(String s, int minLen){
+		while(s.length()<minLen){s=s+" ";}
+		return s;
 	}
 	
 	/**
@@ -1170,6 +1224,7 @@ public class BBDukF {
 				tsw.print(String.format(Locale.ROOT, "%s\t%d\t%.5f%%\t%d\t%.5f%%\n",sn.name,sn.reads,(sn.reads*rmult),sn.bases,(sn.bases*bmult)));
 			}
 		}
+		
 		tsw.poisonAndWait();
 	}
 	
@@ -1412,6 +1467,10 @@ public class BBDukF {
 				s++;
 			}
 		}
+	}
+	
+	public double getPolymerRatio(){
+		return pTracker.calcRatioCumulative(polymerChar1, polymerChar2, polymerLength);
 	}
 	
 	
@@ -1699,10 +1758,16 @@ public class BBDukF {
 			badHeaderBases+=pt.badHeaderBasesT;
 			readsQFiltered+=pt.readsQFilteredT;
 			basesQFiltered+=pt.basesQFilteredT;
+			readsNFiltered+=pt.readsNFilteredT;
+			basesNFiltered+=pt.basesNFilteredT;
 			readsEFiltered+=pt.readsEFilteredT;
 			basesEFiltered+=pt.basesEFilteredT;
 			readsPolyTrimmed+=pt.readsPolyTrimmedT;
 			basesPolyTrimmed+=pt.basesPolyTrimmedT;
+			
+			if(pTracker!=null){
+				pTracker.add(pt.pTrackerT);
+			}
 			
 			if(hitCounts!=null){
 				for(int i=0; i<hitCounts.length; i++){hitCounts[i]+=pt.hitCountsT[i];}
@@ -2090,13 +2155,15 @@ public class BBDukF {
 			}
 			
 			if(calcEntropy){
-				entropyCounts=new short[entropyKmerspace];
-				entropyCountCounts=new short[entropyWindowBases+2];
-				entropyCountCounts[0]=(short)entropyWindowBases;
-				eTracker=new EntropyTracker(entropyK, entropyWindowBases, entropyCutoff, entropyHighpass);
+				eTrackerT=new EntropyTracker(entropyK, entropyWindowBases, Tools.max(0, entropyCutoff), entropyHighpass);
 			}else{
-				entropyCounts=entropyCountCounts=null;
-				eTracker=null;
+				eTrackerT=null;
+			}
+			
+			if(countPolymers){
+				pTrackerT=new PolymerTracker();
+			}else{
+				pTrackerT=null;
 			}
 			
 			maxBasesOutmT=(maxBasesOutm>0 ? Tools.max(1, maxBasesOutm/THREADS) : -1);
@@ -2501,18 +2568,97 @@ public class BBDukF {
 						}
 					}
 					
+					if(!remove && (trimPolyGLeft>0 || trimPolyGRight>0 || filterPolyG>0)){
+						//Do poly-G trimming
+						
+						int rlen1=0, rlen2=0;
+						if(r1!=null){
+							if(filterPolyG>0 && r1.countLeft('G')>=filterPolyG){
+								setDiscarded(r1);
+								readsPolyTrimmedT++;
+							}else if(trimPolyGLeft>0 || trimPolyGRight>0){
+								int x=trimPoly(r1, trimPolyGLeft, trimPolyGRight, (byte)'G');
+								basesPolyTrimmedT+=x;
+								readsPolyTrimmedT+=(x>0 ? 1 : 0);
+								rlen1=r1.length();
+								if(rlen1<minlen1){setDiscarded(r1);}
+							}
+						}
+						if(r2!=null){
+							if(filterPolyG>0 && r2.countLeft('G')>=filterPolyG){
+								setDiscarded(r1);
+								readsPolyTrimmedT++;
+							}else if(trimPolyGLeft>0 || trimPolyGRight>0){
+								int x=trimPoly(r2, trimPolyGLeft, trimPolyGRight, (byte)'G');
+								basesPolyTrimmedT+=x;
+								readsPolyTrimmedT+=(x>0 ? 1 : 0);
+								rlen2=r2.length();
+								if(rlen2<minlen2){setDiscarded(r2);}
+							}
+						}
+						
+						//Discard reads if too short
+						if(shouldRemove(r1, r2)){
+							basesPolyTrimmedT+=r1.pairLength();
+							remove=true;
+							if(addTrimmedToBad && bad!=null){bad.add(r1);}
+						}
+					}
+					
+					if(!remove && (trimPolyCLeft>0 || trimPolyCRight>0 || filterPolyC>0)){
+						//Do poly-C trimming
+						
+						int rlen1=0, rlen2=0;
+						if(r1!=null){
+							if(filterPolyC>0 && r1.countLeft('G')>=filterPolyC){
+								setDiscarded(r1);
+								readsPolyTrimmedT++;
+							}else if(trimPolyCLeft>0 || trimPolyCRight>0){
+								int x=trimPoly(r1, trimPolyCLeft, trimPolyCRight, (byte)'C');
+								basesPolyTrimmedT+=x;
+								readsPolyTrimmedT+=(x>0 ? 1 : 0);
+								rlen1=r1.length();
+								if(rlen1<minlen1){setDiscarded(r1);}
+							}
+						}
+						if(r2!=null){
+							if(filterPolyC>0 && r2.countLeft('G')>=filterPolyC){
+								setDiscarded(r1);
+								readsPolyTrimmedT++;
+							}else if(trimPolyCLeft>0 || trimPolyCRight>0){
+								int x=trimPoly(r2, trimPolyCLeft, trimPolyCRight, (byte)'C');
+								basesPolyTrimmedT+=x;
+								readsPolyTrimmedT+=(x>0 ? 1 : 0);
+								rlen2=r2.length();
+								if(rlen2<minlen2){setDiscarded(r2);}
+							}
+						}
+						
+						//Discard reads if too short
+						if(shouldRemove(r1, r2)){
+							basesPolyTrimmedT+=r1.pairLength();
+							remove=true;
+							if(addTrimmedToBad && bad!=null){bad.add(r1);}
+						}
+					}
+					
 					if(!remove && entropyMask){
 						//Mask entropy
 						if(isNotDiscarded(r1)){
-							int masked=maskLowEntropy(r1, null, eTracker);
+							int masked=maskLowEntropy(r1, null, eTrackerT);
 							basesEFilteredT+=masked;
 							readsEFilteredT+=(masked>0 ? 1 : 0);
 						}
 						if(isNotDiscarded(r2)){
-							int masked=maskLowEntropy(r2, null, eTracker);
+							int masked=maskLowEntropy(r2, null, eTrackerT);
 							basesEFilteredT+=masked;
 							readsEFilteredT+=(masked>0 ? 1 : 0);
 						}
+					}
+					
+					if(entropyMark){
+						markLowEntropy(r1, eTrackerT);
+						markLowEntropy(r2, eTrackerT);
 					}
 					
 					if(!remove){
@@ -2564,8 +2710,16 @@ public class BBDukF {
 						}
 						//Determine whether to discard the reads based on the presence of Ns
 						if(maxNs>=0){
-							if(r1!=null && r1.countUndefined()>maxNs){setDiscarded(r1);}
-							if(r2!=null && r2.countUndefined()>maxNs){setDiscarded(r2);}
+							if(r1!=null && r1.countUndefined()>maxNs){
+								readsNFilteredT++;
+								basesNFilteredT+=r1.length();
+								setDiscarded(r1);
+							}
+							if(r2!=null && r2.countUndefined()>maxNs){
+								readsNFilteredT++;
+								basesNFilteredT+=r2.length();
+								setDiscarded(r2);
+							}
 						}
 						//Determine whether to discard the reads based on a lack of useful kmers
 						if(minConsecutiveBases>0){
@@ -2589,8 +2743,8 @@ public class BBDukF {
 					
 					if(!remove && calcEntropy && !entropyMask){
 						//Test entropy
-						if(isNotDiscarded(r1) && !eTracker.passes(r1.bases, true)){setDiscarded(r1);}
-						if(isNotDiscarded(r2) && !eTracker.passes(r2.bases, true)){setDiscarded(r2);}
+						if(isNotDiscarded(r1) && !eTrackerT.passes(r1.bases, true)){setDiscarded(r1);}
+						if(isNotDiscarded(r2) && !eTrackerT.passes(r2.bases, true)){setDiscarded(r2);}
 						
 						if(shouldRemove(r1, r2)){
 							basesEFilteredT+=r1.pairLength();
@@ -2695,6 +2849,11 @@ public class BBDukF {
 		/*--------------------------------------------------------------*/
 		
 		private void addToHistograms(Read r1, Read r2) {
+			
+			if(pTrackerT!=null){
+				pTrackerT.addPair(r1);
+			}
+			
 			if(fixVariants){
 				CallVariants.fixVars(r1, varMap, scafMap);
 				CallVariants.fixVars(r2, varMap, scafMap);
@@ -2717,39 +2876,6 @@ public class BBDukF {
 				CallVariants.unfixVars(r1);
 				CallVariants.unfixVars(r2);
 			}
-		}
-
-		public int trimPolyA(final Read r, final int minPoly){
-			assert(minPoly>0);
-			if(r==null || r.length()<minPoly){return 0;}
-			final byte[] bases=r.bases;
-
-			int left=Tools.max(countLeft(bases, (byte)'A'), countLeft(bases, (byte)'T'));
-			int right=Tools.max(countRight(bases, (byte)'A'), countRight(bases, (byte)'T'));
-			
-			if(left<minPoly){left=0;}
-			if(right<minPoly){right=0;}
-			int trimmed=0;
-			if(left>0 || right>0){
-				trimmed=TrimRead.trimByAmount(r, left, right, 1);
-			}
-			return trimmed;
-		}
-		
-		private int countLeft(final byte[] bases, final byte base){
-			for(int i=0; i<bases.length; i++){
-				final byte b=bases[i];
-				if(b!=base){return i;}
-			}
-			return bases.length;
-		}
-		
-		private int countRight(final byte[] bases, final byte base){
-			for(int i=bases.length-1; i>=0; i--){
-				final byte b=bases[i];
-				if(b!=base){return bases.length-i-1;}
-			}
-			return bases.length;
 		}
 		
 		/**
@@ -3709,7 +3835,7 @@ public class BBDukF {
 		
 		private int maskLowEntropy(final Read r, BitSet bs, EntropyTracker et){
 			final int window=et.windowBases();
-			if(r.length()<window){return 0;}
+			if(r==null || r.length()<window){return 0;}
 			final byte[] bases=r.bases;
 			if(bs==null){bs=new BitSet(r.length());}
 			else{bs.clear();}
@@ -3721,6 +3847,34 @@ public class BBDukF {
 			}
 			
 			return maskFromBitset(r, bs, entropyMaskLowercase);
+		}
+		
+		private void markLowEntropy(final Read r, EntropyTracker et){
+			final int window=et.windowBases();
+			if(r==null || r.length()<window){return;}
+			final byte[] bases=r.bases;
+			
+			float[] values=new float[r.length()];
+			Arrays.fill(values, 1);
+			
+			et.clear();
+			for(int i=0, min=window-1; i<bases.length; i++){
+				et.add(bases[i]);
+				if(i>=min && et.ns()<1){
+					float e=et.calcEntropy();
+					for(int j=et.leftPos(), max=et.rightPos(); j<=max; j++){
+						values[j]=Tools.min(e, values[j]);
+					}
+				}
+			}
+			
+			if(r.quality==null){
+				r.quality=new byte[r.length()];
+			}
+			for(int i=0; i<values.length; i++){
+				byte q=(byte)(values[i]*41);
+				r.quality[i]=q;
+			}
 		}
 		
 		private int maskFromBitset(final Read r, final BitSet bs, final boolean lowercase){
@@ -3776,10 +3930,8 @@ public class BBDukF {
 		long[] scaffoldReadCountsT;
 		long[] scaffoldBaseCountsT;
 		
-		final short[] entropyCounts;
-		final short[] entropyCountCounts;
-		
-		final EntropyTracker eTracker;
+		final EntropyTracker eTrackerT;
+		final PolymerTracker pTrackerT;
 		
 		private float[] aprob, bprob;
 		
@@ -3800,6 +3952,8 @@ public class BBDukF {
 		long basesFTrimmedT=0;
 		long readsQFilteredT=0;
 		long basesQFilteredT=0;
+		long readsNFilteredT=0;
+		long basesNFilteredT=0;
 		long readsEFilteredT=0;
 		long basesEFilteredT=0;
 		long readsPolyTrimmedT=0;
@@ -3843,6 +3997,38 @@ public class BBDukF {
 		assert(lengthMask==0 || (kmer<lengthMask && rkmer<lengthMask)) : lengthMask+", "+kmer+", "+rkmer;
 		long value=(rcomp ? Tools.max(kmer, rkmer) : kmer);
 		return (value&middleMask)|lengthMask;
+	}
+
+	public static int trimPolyA(final Read r, final int minPoly){
+		assert(minPoly>0);
+		if(r==null || r.length()<minPoly){return 0;}
+
+		int left=Tools.max(r.countLeft((byte)'A'), r.countLeft((byte)'T'));
+		int right=Tools.max(r.countRight((byte)'A'), r.countRight((byte)'T'));
+		
+		if(left<minPoly){left=0;}
+		if(right<minPoly){right=0;}
+		int trimmed=0;
+		if(left>0 || right>0){
+			trimmed=TrimRead.trimByAmount(r, left, right, 1);
+		}
+		return trimmed;
+	}
+
+	public static int trimPoly(final Read r, final int minPolyLeft, final int minPolyRight, final byte c){
+		assert(minPolyLeft>0 || minPolyRight>0);
+		if(r==null){return 0;}
+
+		int left=minPolyLeft>0 ? r.countLeft(c) : 0;
+		int right=minPolyRight>0 ? r.countRight(c) : 0;
+
+		if(left<minPolyLeft){left=0;}
+		if(right<minPolyRight){right=0;}
+		int trimmed=0;
+		if(left>0 || right>0){
+			trimmed=TrimRead.trimByAmount(r, left, right, 1);
+		}
+		return trimmed;
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -3905,7 +4091,7 @@ public class BBDukF {
 	/** Output reads whose mate was discarded */
 	private String outsingle=null;
 	/** Statistics output files */
-	private String outstats=null, outrqc=null, outrpkm=null, outrefstats=null;
+	private String outstats=null, outrqc=null, outrpkm=null, outrefstats=null, polymerStatsFile=null;
 	@Deprecated
 	/** duk-style statistics */
 	private String outduk=null;
@@ -4003,17 +4189,12 @@ public class BBDukF {
 	/** Verify consistency of related data structures (slow) */
 	private boolean verifyEntropy=false;
 	
+	boolean entropyMark=false;
 	boolean entropyMask=false;
 	boolean entropyMaskLowercase=false;
 	
 	/** Perform entropy calculation */
 	final boolean calcEntropy;
-	/** Number of possible unique kmers */
-	final int entropyKmerspace;
-	/** A precalculated constant */
-	final double entropyMult;
-	/** Array of precalculated constants */
-	final double[] entropy;
 	
 	
 	/*--------------------------------------------------------------*/
@@ -4033,6 +4214,8 @@ public class BBDukF {
 	long basesQFiltered=0;
 	long readsEFiltered=0;
 	long basesEFiltered=0;
+	long readsNFiltered=0;
+	long basesNFiltered=0;
 
 	long readsPolyTrimmed=0;
 	long basesPolyTrimmed=0;
@@ -4058,6 +4241,13 @@ public class BBDukF {
 	public long modsum=0; //123
 	
 	long storedKmers=0;
+	
+	boolean countPolymers=false;
+	byte polymerChar1=-1;
+	byte polymerChar2=-1;
+	int polymerLength=20;
+	
+	PolymerTracker pTracker;
 	
 	/*--------------------------------------------------------------*/
 	/*----------------       Final Primitives       ----------------*/
@@ -4113,6 +4303,21 @@ public class BBDukF {
 	final boolean trimClip;
 	/** Trim poly-A tails of at least this length */
 	final int trimPolyA;
+	
+	/** Trim poly-G prefixes of at least this length */
+	final int trimPolyGLeft;
+	/** Trim poly-G tails of at least this length */
+	final int trimPolyGRight;
+	/** Remove reads with poly-G prefixes of at least this length */
+	final int filterPolyG;
+	
+	/** Trim poly-C prefixes of at least this length */
+	final int trimPolyCLeft;
+	/** Trim poly-C tails of at least this length */
+	final int trimPolyCRight;
+	/** Remove reads with poly-C prefixes of at least this length */
+	final int filterPolyC;
+	
 	/** Trim bases at this quality or below.  Default: 4 */
 	final float trimq;
 	/** Error rate for trimming (derived from trimq) */

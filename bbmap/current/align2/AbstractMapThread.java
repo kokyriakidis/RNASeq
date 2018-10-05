@@ -459,6 +459,10 @@ public abstract class AbstractMapThread extends Thread {
 				if(TIME_TAG){startTime=System.nanoTime();}
 				
 				Read r=readlist.get(i);
+				readsIn1++;
+				readsIn2+=r.mateCount();
+				basesIn1+=r.length();
+				basesIn2+=r.mateLength();
 				assert(r.mate==null || (r.pairnum()==0 && r.mate.pairnum()==1)) : r.pairnum()+", "+r.mate.pairnum();
 
 				//				System.out.println("Got read: "+r.toText(false));
@@ -472,7 +476,8 @@ public abstract class AbstractMapThread extends Thread {
 				if(passesBloomFilter){//In this case it contains no kmers shared with the reference
 					basesUsed1+=r.length();
 					basesUsed2+=r.mateLength();
-					passedBloomFilter+=r.pairCount();
+					readsPassedBloomFilter+=r.pairCount();
+					basesPassedBloomFilter+=r.pairLength();
 					readsUsed1++;
 					readsUsed2+=r.mateCount();
 				}else{
@@ -1494,6 +1499,12 @@ public abstract class AbstractMapThread extends Thread {
 		return ambiguous;
 	}
 	
+	int calcTrimmed(Read r){
+		assert(UNTRIM && (TRIM_LEFT || TRIM_RIGHT));
+		if(r==null || r.obj==null || r.obj.getClass()!=TrimRead.class){return 0;}
+		TrimRead tr=(TrimRead) r.obj;
+		return tr.trimmed();
+	}
 	
 	public void calcStatistics1(final Read r, final int maxSwScore, final int maxPossibleQuickScore){
 		final Read r2=r.mate;
@@ -1506,13 +1517,16 @@ public abstract class AbstractMapThread extends Thread {
 			ambiguousBestAlignmentBases1+=len1;
 		}
 		
+		int trimmed=0;
+		if((TRIM_LEFT || TRIM_RIGHT) && UNTRIM){
+			trimmed=calcTrimmed(r)+calcTrimmed(r.mate);
+		}
 		if((!r.mapped() || (r.ambiguous() && AMBIGUOUS_TOSS)) && (r2==null || !r2.mapped() || (r2.ambiguous() && AMBIGUOUS_TOSS))){
-			bothUnmapped++;
-			bothUnmappedBases+=r.length();
-			if(r2!=null){
-				bothUnmapped++;
-				bothUnmappedBases+=r2.length();
-			}
+			bothUnmapped+=r.pairCount();
+			bothUnmappedBases+=r.pairLength()+trimmed;
+		}else{
+			eitherMapped+=r.pairCount();
+			eitherMappedBases+=r.pairLength()+trimmed;
 		}
 
 		int[] correctness=calcCorrectness(r, THRESH);
@@ -3049,12 +3063,17 @@ public abstract class AbstractMapThread extends Thread {
 
 	public boolean verbose=false;
 	public static final boolean verboseS=false;
-	
+
 	public long readsUsed1=0;
 	public long readsUsed2=0;
 	public long basesUsed1=0;
 	public long basesUsed2=0;
-	public long passedBloomFilter=0;
+	public long readsIn1=0;
+	public long readsIn2=0;
+	public long basesIn1=0;
+	public long basesIn2=0;
+	public long readsPassedBloomFilter=0;
+	public long basesPassedBloomFilter=0;
 	public long numMated=0;
 	public long numMatedBases=0;
 	public long badPairs=0;
@@ -3066,6 +3085,8 @@ public abstract class AbstractMapThread extends Thread {
 	public long syntheticReads=0;
 	public long bothUnmapped=0;
 	public long bothUnmappedBases=0;
+	public long eitherMapped=0;
+	public long eitherMappedBases=0;
 
 	public long mapped1=0;
 	public long mappedRetained1=0;

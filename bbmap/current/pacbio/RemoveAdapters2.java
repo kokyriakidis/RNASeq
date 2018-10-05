@@ -93,7 +93,7 @@ public class RemoveAdapters2 {
 				overwrite=Tools.parseBoolean(b);
 				System.out.println("Set overwrite to "+overwrite);
 			}else if(a.equals("threads") || a.equals("t")){
-				if(b.equalsIgnoreCase("auto")){THREADS=Data.LOGICAL_PROCESSORS;}
+				if(b.equalsIgnoreCase("auto")){THREADS=Shared.LOGICAL_PROCESSORS;}
 				else{THREADS=Integer.parseInt(b);}
 				System.out.println("Set threads to "+THREADS);
 			}else if(a.equals("reads") || a.equals("maxreads")){
@@ -624,7 +624,7 @@ public class RemoveAdapters2 {
 	private static boolean overwrite=false;
 	/** Permission to append to existing files */
 	private static boolean append=false;
-	private static int THREADS=Data.LOGICAL_PROCESSORS;
+	private static int THREADS=Shared.LOGICAL_PROCESSORS;
 	private static boolean OUTPUT_READS=false;
 	private static boolean ordered=false;
 	private static boolean PERFECTMODE=false;

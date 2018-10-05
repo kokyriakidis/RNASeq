@@ -442,9 +442,10 @@ public class FastaReadInputStream extends ReadInputStream {
 		int len=bstop;
 		int r=-1;
 		int sum=0;
+		boolean seenNewline=false;
 		while(len==bstop){//hit end of input without encountering a caret
 			if(bstop==buffer.length){
-				buffer=KillSwitch.copyOf(buffer, buffer.length*2);
+				buffer=KillSwitch.copyOf(buffer, buffer.length*2L);
 				if(verbose){System.err.println("Resized to "+buffer.length);}
 			}
 			if(verbose){System.err.println("A: bstop="+bstop+", len="+len);}
@@ -459,13 +460,13 @@ public class FastaReadInputStream extends ReadInputStream {
 			if(r>0){
 				sum+=r;
 				bstop=bstop+r;
-				if(bstop>0 && len==0){len=1;}
-				boolean seenNewline=false;
-				while(len<bstop && (buffer[len]!=carrot || !seenNewline)){
+				if(bstop>0 && len==0){len=1;}//Probably to skip the first >
+				
+				while(len<bstop && (buffer[len]!=carrot || !seenNewline)){//I need to see a caret after newline
 					seenNewline|=(buffer[len]=='\n');
 					len++;
 				}
-				if(verbose){System.err.println("C: bstop="+bstop+", len="+len+", seenNewline="+seenNewline);}
+				if(verbose){System.err.println("C: bstop="+bstop+", len="+len+", seenNewline="+seenNewline/*+", seenCarrot="+seenCarrot*/);}
 			}else{
 				len=bstop;
 				if(verbose){System.err.println("D: bstop="+bstop+", len="+len);}

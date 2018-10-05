@@ -245,7 +245,7 @@ public class BloomFilter implements Serializable {
 		final int cbits=bits;
 		final long totalBits=8*filterMemory;
 		final long cells=totalBits/cbits;
-//		System.err.println("filterMemory="+filterMemory+", cells="+cells);
+		outstream.println("Filter Memory = "+String.format("%.2f GB", filterMemory/(double)(1024*1024*1024)));
 		KCountArray7MTA kca=(KCountArray7MTA)KmerCount7MTA.makeKcaFromIndex(k, cbits, cells, hashes, rcomp);
 		return kca;
 	}

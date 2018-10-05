@@ -14,6 +14,7 @@ import shared.Tools;
 import structures.AbstractBitSet;
 import structures.Heap;
 import tax.TaxNode;
+import tax.TaxTree;
 
 public class SketchSearcher extends SketchObject {
 	
@@ -38,7 +39,9 @@ public class SketchSearcher extends SketchObject {
 			threads=Integer.parseInt(b);
 		}
 		
-		else if(a.equals("index") || a.equals("makeindex")){
+		else if(a.equalsIgnoreCase("minLevelExtended") || a.equalsIgnoreCase("minLevel")){
+			minLevelExtended=TaxTree.parseLevelExtended(b);
+		}else if(a.equals("index") || a.equals("makeindex")){
 			if(b!=null && "auto".equalsIgnoreCase(b)){
 				autoIndex=true;
 				makeIndex=true;
@@ -50,7 +53,7 @@ public class SketchSearcher extends SketchObject {
 			SketchIndex.indexLimit=Integer.parseInt(b);
 		}
 		
-		else if(b==null && arg.indexOf('=')<0 && addFileIfNotFound){//if(new File(arg).exists())
+		else if(b==null && arg.indexOf('=')<0 && addFileIfNotFound && (arg.indexOf(',')>=0 || new File(arg).exists())){
 			addRefFiles(arg);
 		}else{
 			return false;
@@ -138,9 +141,10 @@ public class SketchSearcher extends SketchObject {
 		final SketchResults sr;
 		if(index!=null){
 			sr=index.getSketches(a, params);
+			sr.filterMeta(params);//Just added this...
 		}else{
 			sr=new SketchResults(a, refSketches, null);
-			sr.filterMeta(params);
+			sr.filterMeta(params);//Maybe not a good place for this due to concurrent modification?
 		}
 		
 		if(verbose2){System.err.println("At processSketch 2");} //123
@@ -169,7 +173,9 @@ public class SketchSearcher extends SketchObject {
 			if(verbose2){System.err.println("At processSketch 2.5");} //123
 			assert(buffer.cbs==null);
 			for(Sketch b : sr.refSketchList){
+//				if(verbose2){System.err.println("before: a.compareBitSet()="+a.compareBitSet());}
 				processPair(a, b, buffer, a.compareBitSet(), /*sr.taxHits,*/ fakeID, map, params);
+//				if(verbose2){System.err.println("after: a.compareBitSet()="+a.compareBitSet());}
 			}
 			if(verbose2){System.err.println("At processSketch 2.6");} //123
 		}
@@ -182,6 +188,27 @@ public class SketchSearcher extends SketchObject {
 		if(verbose2){System.err.println("At processSketch 4");} //123
 		
 		return sr;
+	}
+	
+	//For remote homology
+	boolean passesTax(Sketch q, Sketch ref){
+		assert(minLevelExtended>=0);
+		final int qid=q.taxID;
+		if(qid<0 || qid>=minFakeID){return false;}
+		TaxNode qtn=taxtree.getNode(qid);
+		if(qtn==null){return false;}
+		if(qtn.levelExtended>minLevelExtended){return false;}
+		final int rid=(ref==null ? -1 : ref.taxID);
+		if(rid>=0 && rid<minFakeID){
+			TaxNode rtn=taxtree.getNode(rid);
+			if(rtn!=null && rtn.levelExtended<=minLevelExtended){
+				TaxNode ancestor=taxtree.commonAncestor(qtn, rtn);
+				if(ancestor!=null && ancestor.levelExtended>=minLevelExtended){
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	private void spawnThreads(Sketch a, ArrayList<Sketch> refs, AtomicInteger fakeID,
@@ -229,7 +256,10 @@ public class SketchSearcher extends SketchObject {
 	boolean processPair(Sketch a, Sketch b, CompareBuffer buffer, AbstractBitSet abs,
 			AtomicInteger fakeID, ConcurrentHashMap<Integer, Comparison> map, DisplayParams params){
 //		System.err.println("Comparing "+a.name()+" and "+b.name());
+		
+		
 		if(b.genomeSizeBases<params.minBases){return false;}
+		if(minLevelExtended>-1 && !passesTax(a, b)){return false;}
 		if(params.minSizeRatio>0){
 			long sea=a.genomeSizeEstimate();
 			long seb=b.genomeSizeEstimate();
@@ -245,7 +275,8 @@ public class SketchSearcher extends SketchObject {
 		if(tn!=null){
 			c.taxName=tn.name;
 			if(tn.level<params.taxLevel){
-				tn=taxtree.getNodeAtLevel(b.taxID, params.taxLevel);
+				TaxNode tn2=taxtree.getNodeAtLevel(b.taxID, params.taxLevel);
+				tn=tn2;
 			}
 		}
 		Integer key=(tn==null ? c.taxID : tn.id);
@@ -269,7 +300,7 @@ public class SketchSearcher extends SketchObject {
 //		assert(heap!=null); //Optional, for testing.
 		if(a==b && !compareSelf){return null;}
 		final int matches=a.countMatches(b, buffer, abs, true/*!makeIndex || !AUTOSIZE*/ /*, taxHits, contamLevel*/, null, -1);
-		assert(matches==buffer.matches);
+		assert(matches==buffer.hits());
 		if(matches<minHits){return null;}
 		
 		{
@@ -284,7 +315,7 @@ public class SketchSearcher extends SketchObject {
 			}
 		}
 		
-		if(heap!=null && !heap.hasRoom() && heap.peek().hits>matches){return null;} //TODO:  Should be based on score
+		if(heap!=null && !heap.hasRoom() && heap.peek().hits()>matches){return null;} //TODO:  Should be based on score
 		
 //		System.err.print("*");
 		Comparison c=new Comparison(buffer, a, b);
@@ -387,5 +418,7 @@ public class SketchSearcher extends SketchObject {
 	boolean verbose;
 	boolean errorState=false;
 	AtomicLong comparisons=new AtomicLong(0);
+	
+	int minLevelExtended=-1;
 	
 }

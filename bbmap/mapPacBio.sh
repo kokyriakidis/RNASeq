@@ -5,6 +5,7 @@ usage(){
 	bash "$DIR"bbmap.sh
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do
@@ -62,11 +63,13 @@ mapPacBio() {
 		module use /global/common/software/m342/nersc-builds/denovo/Modules/usg
 		module unload java
 		module load java/1.8.0_144
+		module unload PrgEnv-intel
 		module load PrgEnv-gnu/7.1
 		module load samtools/1.4
 		module load pigz
 	fi
-	local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMapPacBio build=1 overwrite=true minratio=0.40 fastareadlen=6000 ambiguous=best minscaf=100 startpad=10000 stoppad=10000 midpad=6000 $@"
+	#local CMD="java -Djava.library.path=$NATIVELIBDIR $EA $z -cp $CP align2.BBMapPacBio build=1 overwrite=true minratio=0.40 fastareadlen=6000 ambiguous=best minscaf=100 startpad=10000 stoppad=10000 midpad=6000 $@"
+	local CMD="java $EA $z -cp $CP align2.BBMapPacBio build=1 overwrite=true minratio=0.40 fastareadlen=6000 ambiguous=best minscaf=100 startpad=10000 stoppad=10000 midpad=6000 $@"
 	echo $CMD >&2
 	eval $CMD
 }

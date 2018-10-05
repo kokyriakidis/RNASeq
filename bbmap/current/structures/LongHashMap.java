@@ -306,6 +306,21 @@ public final class LongHashMap{
 		return x;
 	}
 	
+	public long[] getMin(int thresh){
+		int found=0;
+		long min=Long.MAX_VALUE;
+		for(int i=0; i<values.length; i++){
+			assert((values[i]==0)==(keys[i]==invalid)) : i+", "+values[i]+", "+keys[i]+", "+invalid+"\n"+toStringSetView();
+			assert((keys[i]<0)==((keys[i]==invalid))) : toStringSetView();
+			if(values[i]>=thresh){
+				assert(keys[i]>=0) : "\nNegative key ("+keys[i]+", "+values[i]+", "+i+") for thresh "+thresh+":\n"+toStringSetView();
+				found++;
+				min=Tools.min(min, keys[i]);
+			}
+		}
+		return new long[] {found>0 ? min : invalid, found};
+	}
+	
 	public long[] toArray(int thresh){
 		thresh=Tools.max(thresh, 1);
 		int len=0;

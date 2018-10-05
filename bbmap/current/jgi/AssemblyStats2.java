@@ -13,6 +13,7 @@ import dna.FastaToChromArrays2;
 import fileIO.FileFormat;
 import fileIO.ReadWrite;
 import fileIO.TextStreamWriter;
+import json.JsonObject;
 import shared.Parser;
 import shared.PreParser;
 import shared.Shared;
@@ -105,14 +106,15 @@ public final class AssemblyStats2 {
 						gc=null;
 					}
 				}else if(a.equals("format")){
-					FORMAT=Integer.parseInt(b);
-					if(FORMAT<0 || FORMAT>7){
-						throw new RuntimeException("\nUnknown format: "+FORMAT+"; valid values are 1 through 7.\n");
+					if("json".equalsIgnoreCase(b)){FORMAT=8;}
+					else{FORMAT=Integer.parseInt(b);}
+					if(FORMAT<0 || FORMAT>8){
+						throw new RuntimeException("\nUnknown format: "+FORMAT+"; valid values are 1 through 8.\n");
 					}
 				}else if(a.equals("gcformat")){
 					GCFORMAT=Integer.parseInt(b);
-					if(GCFORMAT<0 || GCFORMAT>4){
-						throw new RuntimeException("\nUnknown gcformat: "+GCFORMAT+"; valid values are 0 through 4.\n");
+					if(GCFORMAT<0 || GCFORMAT>5){
+						throw new RuntimeException("\nUnknown gcformat: "+GCFORMAT+"; valid values are 0 through 5.\n");
 					}
 				}else if(a.equals("cutoff")){
 					cutoff=Tools.parseKMG(b);
@@ -311,6 +313,8 @@ public final class AssemblyStats2 {
 				tswgc.println("#Name\tLength\tA\tC\tG\tT\tN\tIUPAC\tOther\tGC");
 			}else if(GCFORMAT==4){
 				tswgc.println("#Name\tLength\tGC");
+			}else if(GCFORMAT==5){
+				tswgc.println("#Name\tLength\tGC\tlogsum\tpowersum");
 			}else{
 				throw new RuntimeException("Unknown format.");
 			}
@@ -601,6 +605,8 @@ public final class AssemblyStats2 {
 				tswgc.println("#Name\tLength\tA\tC\tG\tT\tN\tIUPAC\tOther\tGC");
 			}else if(GCFORMAT==4){
 				tswgc.println("#Name\tLength\tGC");
+			}else if(GCFORMAT==5){
+				tswgc.println("#Name\tLength\tGC\tlogsum\tpowersum");
 			}else{
 				throw new RuntimeException("Unknown format.");
 			}
@@ -907,6 +913,16 @@ public final class AssemblyStats2 {
 		return sum;
 	}
 	
+	private static double logsum(long len){
+		if(len<logSumOffset){return 0;}
+		final double mult=1/Math.log(logSumBase);
+		double log=mult*Math.log(len);
+		if(squareLog){log=log*log*0.05;}
+		else if(logPower!=1){log=Math.pow(log*0.12, logPower);}
+		double incr=log*len;
+		return incr/logSumOffset;
+	}
+	
 	public static double calcLogSumLengths(LongList lengths, int cutoff, double base){
 		final double mult=1/Math.log(base);
 		
@@ -954,6 +970,14 @@ public final class AssemblyStats2 {
 			}
 		}
 		return sum;
+	}
+	
+	private static double powersum(long len){
+		if(len<logSumOffset){return 0;}
+		final double mult=1/Math.pow(1000, powSumPower);
+		double pow=mult*Math.pow(len, powSumPower);
+		double incr=pow*len;
+		return incr/logSumOffset;
 	}
 	
 	public static double calcPowerSumLengths(LongList lengths, int cutoff, double power){
@@ -1064,6 +1088,8 @@ public final class AssemblyStats2 {
 		}else if(FORMAT==4){
 			
 		}else if(FORMAT==5){
+			
+		}else if(FORMAT==8){
 			
 		}else if(FORMAT==7){
 			sb.append("Main genome contig sequence total:  \t"+String.format(Locale.ROOT, "%.3f MB",contiglen/1000000f)+"\n");
@@ -1403,7 +1429,7 @@ public final class AssemblyStats2 {
 			if(GCFORMAT==0){
 				//Print nothing
 			}else{
-				if(GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4){
+				if(GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4 || GCFORMAT==5){
 					tsw.println("A\tC\tG\tT\tN\tIUPAC\tOther\tGC\tGC_stdev");
 				}else{
 					tsw.println("GC\tGC_stdev");
@@ -1493,6 +1519,40 @@ public final class AssemblyStats2 {
 			if(addfilename){sb.append('\t').append(name);}
 			
 			tsw.println(sb);
+		}else if(FORMAT==8){//JSON
+			
+			JsonObject jo=new JsonObject();
+			jo.add("scaffolds", scaffolds);
+			jo.add("contigs", contigs);
+			jo.add("scaf_bp", scaflen);
+			jo.add("contig_bp", contiglen);
+			jo.addLiteral("gap_pct", (scaflen-contiglen)*100f/scaflen, 5);
+			jo.add("scaf_N50", ll50);
+			jo.add("scaf_L50", ln50);
+			jo.add("ctg_N50", cl50);
+			jo.add("ctg_L50", cn50);
+
+			jo.add("scaf_N90", ll90);
+			jo.add("scaf_L90", ln90);
+			jo.add("ctg_N90", cl90);
+			jo.add("ctg_L90", cn90);
+
+			jo.addLiteral("scaf_logsum", sLogSumString);
+			jo.addLiteral("scaf_powsum", sPowSumString);
+			jo.addLiteral("ctg_logsum", cLogSumString);
+			jo.addLiteral("ctg_powsum", cPowSumString);
+			jo.addLiteral("asm_score", sAssemblyScoreString);
+			jo.add("scaf_max", maxScaf);
+			jo.add("ctg_max", maxContig);
+			jo.add("scaf_n_gt50K", numOver50);
+			jo.add("scaf_l_gt50k", basesOver50);
+
+			jo.add("scaf_pct_gt50K", fractionOver50);
+			jo.addLiteral("gc_avg", (counts[1]+counts[2])*1.0/(counts[0]+counts[1]+counts[2]+counts[3]), 5);
+			jo.addLiteral("gc_std", gc_std, 5);
+			jo.add("filename", name);
+			
+			tsw.println(jo.toString());
 		}else if(FORMAT==4){
 			
 			if(useheader){
@@ -1649,7 +1709,7 @@ public final class AssemblyStats2 {
 			if(GCFORMAT==0){
 				//Print nothing
 			}else{
-				if(GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4){
+				if(GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4 || GCFORMAT==5){
 					tsw.println("A\tC\tG\tT\tGC\tGC_stdev");
 				}else{
 					tsw.println("GC\tGC_stdev");
@@ -1820,6 +1880,8 @@ public final class AssemblyStats2 {
 					sumAll, a*invDef, c*invDef, g*invDef, t*invDef, n*invAll, iupacD, otherD, (g+c)*invDef)).toString();
 		}else if(GCFORMAT==4){
 			return sb.append(String.format(Locale.ROOT, "\t%d\t%.4f\n", sumAll, (g+c)*invDef)).toString();
+		}else if(GCFORMAT==5){
+			return sb.append(String.format(Locale.ROOT, "\t%d\t%.4f\t%.2f\t%.2f\n", sumAll, (g+c)*invDef, logsum(sumAll), powersum(sumAll))).toString();
 		}else{
 			throw new RuntimeException("Unknown format.");
 		}
@@ -1837,7 +1899,7 @@ public final class AssemblyStats2 {
 		if(FORMAT==7){
 			return sb.append(String.format(Locale.ROOT, "%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n",
 					a*invDef, c*invDef, g*invDef, t*invDef, (g+c)*invDef, gc_std)).toString();
-		}else if(GCFORMAT==0 || GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4){
+		}else if(GCFORMAT==0 || GCFORMAT==1 || GCFORMAT==3 || GCFORMAT==4 || GCFORMAT==5){
 			return sb.append(String.format(Locale.ROOT, "%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\t%.4f\n",
 					a*invDef, c*invDef, g*invDef, t*invDef, n*invAll, iupacD, otherD, (g+c)*invDef, gc_std)).toString();
 		}else if(GCFORMAT==2){
@@ -2005,7 +2067,7 @@ public final class AssemblyStats2 {
 	public static boolean printExtended=false;
 	public static int logSumOffset=1000;
 	public static double powSumPower=0.25;
-	public double logSumBase=2;
+	public static double logSumBase=2;
 	public static boolean squareLog=false;
 	public static double logPower=1.0;
 	public static boolean showspeed=false;//true;

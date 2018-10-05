@@ -158,7 +158,7 @@ public class MergeSamples {
 			if(row[0]!=null){
 				VCFLine merged=merge(row);
 				merged.toText(bb);
-				bb.append('\n');
+				bb.nl();
 				if(bb.length>32000){
 					if(bswVcf!=null){bswVcf.print(bb);}
 					bb=new ByteBuilder(34000);
@@ -294,12 +294,12 @@ public class MergeSamples {
 			bb.append(lines[0]);
 			for(int i=1; i<lines.length; i++){
 				String[] split=new String(lines[i]).split("\t");
-				bb.append('\t').append(split[split.length-1]);
+				bb.tab().append(split[split.length-1]);
 			}
-			bb.append('\n');
+			bb.nl();
 		}else{
 			bb.append(lines[0]);
-			bb.append('\n');
+			bb.nl();
 		}
 	}
 	
@@ -433,7 +433,7 @@ public class MergeSamples {
 			if(row[0]!=null){
 				VCFLine merged=merge(row);
 				merged.toText(bb);
-				bb.append('\n');
+				bb.nl();
 			}
 		}
 		

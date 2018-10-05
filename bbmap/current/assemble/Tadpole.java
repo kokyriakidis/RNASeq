@@ -68,6 +68,9 @@ public abstract class Tadpole extends ShaveObject{
 	public static Tadpole makeTadpole(String[] args, boolean setDefaults){
 		final int k=preparseK(args);
 		if(k>31 || FORCE_TADPOLE2){
+			synchronized(Tadpole.class){
+				AbstractKmerTableSet.MASK_CORE=false;
+			}
 			return new Tadpole2(args, true);
 		}else{
 			synchronized(Tadpole.class){
@@ -217,7 +220,7 @@ public abstract class Tadpole extends ShaveObject{
 					processingMode=correctMode;
 				}else if(b.equalsIgnoreCase("insert")){
 					processingMode=insertMode;
-				}else if(b.equalsIgnoreCase("discard")){
+				}else if(b.equalsIgnoreCase("discard") || b.equalsIgnoreCase("toss") || b.equalsIgnoreCase("filter")){
 					processingMode=discardMode;
 				}else{
 					assert(false) : "Unknown mode "+b;
@@ -252,13 +255,16 @@ public abstract class Tadpole extends ShaveObject{
 				}
 			}else if(a.equals("mincoverage") || a.equals("mincov")){
 				minCoverage=Float.parseFloat(b);
+			}else if(a.equals("maxcoverage") || a.equals("maxcov")){
+				if(b.equalsIgnoreCase("inf")){maxCoverage=Float.MAX_VALUE;}
+				else{maxCoverage=Float.parseFloat(b);}
 			}else if(a.equals("branchlower") || a.equals("branchlowerconst") || a.equals("blc")){
 				branchLowerConst=Tools.parseIntKMG(b);
 			}else if(a.equals("branchmult2") || a.equals("bm2")){
 				branchMult2=Tools.parseIntKMG(b);
 			}else if(a.equals("branchmult") || a.equals("branchmult1") || a.equals("bm1")){
 				branchMult1=Tools.parseIntKMG(b);
-			}else if(a.equals("mincount") || a.equals("mincov") || a.equals("mindepth") || a.equals("min")){
+			}else if(a.equals("mincount") || a.equals("mindepth") || a.equals("min")){
 				minCountSeed=minCountExtend=Tools.parseIntKMG(b);
 			}else if(a.equals("mindepthseed") || a.equals("mds") || a.equals("mincountseed") || a.equals("mcs")){
 				minCountSeed=Tools.parseIntKMG(b);
@@ -310,7 +316,7 @@ public abstract class Tadpole extends ShaveObject{
 			}
 			
 			//Shaver
-			else if(a.equals("shaverinse") || a.equals("shaveandrinse") || a.equals("wash")){
+			else if(a.equals("shaverinse") || a.equals("shaveandrinse") || a.equals("wash") || a.equals("sr")){
 				if(b==null || Character.isLetter(b.charAt(0))){
 					removeDeadEnds=removeBubbles=Tools.parseBoolean(b);
 				}else{
@@ -1024,7 +1030,7 @@ public abstract class Tadpole extends ShaveObject{
 			ByteBuilder bb=new ByteBuilder(1000);
 			bb.append("digraph G {\n");
 			for(Contig c : allContigs){
-				bb.append('\t').append(c.id);
+				bb.tab().append(c.id);
 				bb.append(" [label=\"id=").append(c.id);
 				bb.append("\\nlen=").append(c.bases.length);
 				bb.append("\\ncov=").append(c.coverage, 1);
@@ -1034,7 +1040,7 @@ public abstract class Tadpole extends ShaveObject{
 					for(int x=0; x<4; x++){
 						Edge e=c.leftEdges[x];
 						if(e!=null){
-							bb.append('\t');
+							bb.tab();
 							bb.append(e.origin);
 							bb.append(" -> ");
 							bb.append(e.destination);
@@ -1047,7 +1053,7 @@ public abstract class Tadpole extends ShaveObject{
 					for(int x=0; x<4; x++){
 						Edge e=c.rightEdges[x];
 						if(e!=null){
-							bb.append('\t');
+							bb.tab();
 							bb.append(e.origin);
 							bb.append(" -> ");
 							bb.append(e.destination);
@@ -2100,6 +2106,7 @@ public abstract class Tadpole extends ShaveObject{
 	public int minExtension=2;
 	public int minContigLen=-1;
 	public float minCoverage=1;
+	public float maxCoverage=Float.MAX_VALUE;
 	public boolean joinContigs;
 	
 	int trimEnds=0;

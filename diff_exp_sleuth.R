@@ -1,5 +1,6 @@
-#sleuth_object = diff_exp_sleuth("Control", "SOX15")
+#!/usr/bin/Rscript
 
+#sleuth_object = diff_exp_sleuth("Control", "SOX15")
 
 diff_exp_sleuth <- function(condition1, condition2) {
 
@@ -8,15 +9,14 @@ library(biomaRt)
 
 tx2gene <- function(){
 	mart <- biomaRt::useMart(biomart = "ensembl", dataset = "hsapiens_gene_ensembl")
-	t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "ensembl_gene_id",
-            	"external_gene_name"), mart = mart)
-	t2g <- dplyr::rename(t2g, target_id = ensembl_transcript_id,
-                 	ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
+	t2g <- biomaRt::getBM(attributes = c("ensembl_transcript_id", "transcript_version", "ensembl_gene_id", "external_gene_name"), mart = mart)
+	t2g <- dplyr::mutate(t2g, target_id = paste(ensembl_transcript_id, transcript_version, sep = "."))
+	t2g <- dplyr::rename(t2g, target_id= target_id, ens_gene = ensembl_gene_id, ext_gene = external_gene_name)
 	return(t2g)
 	}
 
 t2g <- tx2gene()
-	
+
 metadata <- read.delim("./Metadata/metadata.txt", comment.char="#")
 
 # re-format metadata to meet sleuth's required format

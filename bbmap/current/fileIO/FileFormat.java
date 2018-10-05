@@ -306,6 +306,7 @@ public final class FileFormat {
 		else if(ext.equals("var")){r[0]=VAR;}
 		else if(ext.equals("gff") || ext.equals("gff3")){r[0]=GFF;}
 		else if(ext.equals("bed")){r[0]=BED;}
+		else if(ext.equals("pgm") || ext.equals("pkm")){r[0]=PGM;}
 		
 		if(comp!=null){
 			r[1]=Gene.find3(comp, COMPRESSION_ARRAY);
@@ -491,6 +492,18 @@ public final class FileFormat {
 			|| ext.equals("frn") || ext.equals("seq") || ext.equals("fsa") || ext.equals("faa"));
 	}
 	
+	public static boolean isFastaFile(String fname){
+		if(fname==null){return false;}
+		String ext=ReadWrite.rawExtension(fname);
+		return isFasta(ext);
+	}
+	
+	public static boolean isPgmFile(String fname){
+		if(fname==null){return false;}
+		String ext=ReadWrite.rawExtension(fname);
+		return isPgm(ext);
+	}
+	
 	public static boolean isAmino(String ext){
 		if(ext==null){return false;}
 		return ext.equals("faa"); //TODO: Investigate whether other extensions imply AA.
@@ -509,9 +522,26 @@ public final class FileFormat {
 		return (ext.equals("fq") || ext.equals("fastq"));
 	}
 	
+	public static boolean isPgm(String ext){
+		if(ext==null){return false;}
+		return (ext.equals("pgm") || ext.equals("pkm"));
+	}
+	
+	public static boolean isFastqFile(String fname){
+		if(fname==null){return false;}
+		String ext=ReadWrite.rawExtension(fname);
+		return isFastq(ext);
+	}
+	
 	public static boolean isSamOrBam(String ext){
 		if(ext==null){return false;}
 		return (ext.equals("sam") || ext.equals("bam"));
+	}
+	
+	public static boolean isSamOrBamFile(String fname){
+		if(fname==null){return false;}
+		String ext=ReadWrite.rawExtension(fname);
+		return isSamOrBam(ext);
 	}
 	
 	public static boolean isBam(String ext){
@@ -522,8 +552,7 @@ public final class FileFormat {
 	public static boolean isBamFile(String fname){
 		if(fname==null){return false;}
 		String ext=ReadWrite.rawExtension(fname);
-		if(ext==null){return false;}
-		return ext.equals("bam");
+		return isBam(ext);
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -730,13 +759,14 @@ public final class FileFormat {
 	public static final int VAR=23;
 	public static final int GFF=24;
 	public static final int BED=25;
+	public static final int PGM=26, PKM=26;
 	
 	public static final String[] FORMAT_ARRAY=new String[] {
 		"unknown", "fasta", "fastq", "bread", "sam", "csfasta",
 		"qual", "sequential", "random", "sites", "attachment",
 		"bam", "scarf", "text", "phylip", "header", "int1d",
 		"long1d", "bitset", "sketch", "oneline", "fastr",
-		"vcf", "var", "gff", "bed"
+		"vcf", "var", "gff", "bed", "pgm"
 	};
 	
 	public static final String[] EXTENSION_LIST=new String[] {
@@ -746,7 +776,7 @@ public final class FileFormat {
 		"scarf", "phylip", "txt",
 		"gz", "gzip", "bz2", "zip", "xz", "dsrc", "header", "headers",
 		"int1d", "long1d", "bitset", "sketch", "oneline", "flat", "fqz",
-		"gff", "gff3", "var", "vcf", "bed"
+		"gff", "gff3", "var", "vcf", "bed", "pgm"
 	};
 	
 	/* Compression */

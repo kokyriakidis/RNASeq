@@ -119,13 +119,13 @@ def do_write_unique_20_mers(fastq, totalReadCount, log):
 
         status = "2_unique_mers_sampling in progress"
         checkpoint_step_wrapper(status)
-        log.info("2_unique_mers_sampling in progress.")
+        log.info(status)
 
         retCode, newDataFile, newPngPlotFile, newHtmlPlotFile = write_unique_20_mers(fastq, log)
 
         if retCode != RQCExitCodes.JGI_SUCCESS:
-            log.error("2_unique_mers_sampling failed.")
             status = "2_unique_mers_sampling failed"
+            log.error(status)
             checkpoint_step_wrapper(status)
 
         else:
@@ -477,7 +477,7 @@ def do_illumina_find_common_motifs(fastq, log):
 
     status = "8_illumina_find_common_motifs in progress"
     checkpoint_step_wrapper(status)
-    log.info("8_illumina_find_common_motifs in progress.")
+    log.info(status)
 
     retCode, statDataFile = illumina_find_common_motifs(fastq, log)
 
@@ -1184,6 +1184,7 @@ def do_html_contam_art_first_n_pb_tr(stats, files, odir, filepath_prefix):
 
 
 def do_html_body(odir, filepath_prefix):
+    print('do_html_body - %s' % filepath_prefix)
     temp = os.path.join(PYDIR, 'template/readqc_body_template.html')
     statsf = os.path.join(odir, 'readqc_stats.txt')
     if not os.path.isfile(statsf):
@@ -1358,7 +1359,7 @@ def do_html_body(odir, filepath_prefix):
 
 
 def do_html(odir, infile):
-    odir = os.path.abspath(odir)
+    # odir = os.path.abspath(odir)  ## DO NOT convert!! The relative file path in html need this original odir string matching
 
     screen('Output dir - %s' % odir)
     fname = os.path.basename(infile)

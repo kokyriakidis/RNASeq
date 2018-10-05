@@ -1117,34 +1117,34 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 		
 		if(bb==null){bb=new ByteBuilder();}
 		bb.append(id);
-		bb.append('\t');
+		bb.tab();
 		bb.append(numericID);
-		bb.append('\t');
+		bb.tab();
 		bb.append(chrom);
-		bb.append('\t');
+		bb.tab();
 		bb.append(Gene.strandCodes2[strand()]);
-		bb.append('\t');
+		bb.tab();
 		bb.append(start);
-		bb.append('\t');
+		bb.tab();
 		bb.append(stop);
-		bb.append('\t');
+		bb.tab();
 		
 		for(int i=maskArray.length-1; i>=0; i--){
 			bb.append(flagToNumber(maskArray[i]));
 		}
-		bb.append('\t');
+		bb.tab();
 		
 		bb.append(copies);
-		bb.append('\t');
+		bb.tab();
 
 		bb.append(errors);
-		bb.append('\t');
+		bb.tab();
 		bb.append(mapScore);
-		bb.append('\t');
+		bb.tab();
 		
 		if(bases==null){bb.append('.');}
 		else{bb.append(bases);}
-		bb.append('\t');
+		bb.tab();
 		
 //		int qualSum=0;
 //		int qualMin=99999;
@@ -1161,14 +1161,14 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 			}
 			bb.length+=quality.length;
 		}
-		bb.append('\t');
+		bb.tab();
 		
 		if(insert<1){bb.append('.');}else{bb.append(insert);};
-		bb.append('\t');
+		bb.tab();
 		
 		if(true || quality==null){
 			bb.append('.');
-			bb.append('\t');
+			bb.tab();
 		}else{
 //			//These are not really necessary...
 //			sb.append(qualSum/quality.length);
@@ -1177,7 +1177,7 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 		
 		if(match==null){bb.append('.');}
 		else{bb.append(match);}
-		bb.append('\t');
+		bb.tab();
 		
 		if(gaps==null){
 			bb.append('.');
@@ -1194,7 +1194,7 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 				"\n"+this.numericID+"\n"+Arrays.toString(gaps)+"\n"+sites.toString()+"\n";
 			
 			for(SiteScore ss : sites){
-				bb.append('\t');
+				bb.tab();
 				if(ss==null){
 					bb.append((byte[])null);
 				}else{
@@ -1205,7 +1205,7 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 		}
 		
 		if(originalSite!=null){
-			bb.append('\t');
+			bb.tab();
 			bb.append('*');
 			originalSite.toBytes(bb);
 		}
@@ -2983,6 +2983,25 @@ public final class Read implements Comparable<Read>, Cloneable, Serializable{
 		sum+=(quality==null ? 0 : quality.length);
 		sum+=(id==null ? 0 : id.length());
 		return sum;
+	}
+
+	public int countLeft(final char base){return countLeft((byte)base);}
+	public int countRight(final char base){return countRight((byte)base);}
+	
+	public int countLeft(final byte base){
+		for(int i=0; i<bases.length; i++){
+			final byte b=bases[i];
+			if(b!=base){return i;}
+		}
+		return bases.length;
+	}
+	
+	public int countRight(final byte base){
+		for(int i=bases.length-1; i>=0; i--){
+			final byte b=bases[i];
+			if(b!=base){return bases.length-i-1;}
+		}
+		return bases.length;
 	}
 	
 	public boolean untrim(){

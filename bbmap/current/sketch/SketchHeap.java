@@ -57,6 +57,27 @@ public class SketchHeap {
 		}
 	}
 	
+	public void add(Sketch b){
+		if(taxID<0){taxID=b.taxID;}
+		if(imgID<0){imgID=b.imgID;}
+		if(taxName==null){taxName=b.taxName();}
+		if(name0==null){name0=b.name0();}
+		if(fname==null){fname=b.fname();}
+		genomeSizeBases+=b.genomeSizeBases;
+		genomeSizeKmers+=b.genomeSizeKmers;
+		genomeSequences+=b.genomeSequences;
+		
+		long[] keys=b.array;
+		int[] counts=b.counts;
+		assert(keys.length==b.length()) : keys.length+", "+b.length(); //Otherwise, change to loop through the size
+		for(int i=0; i<keys.length; i++){
+			long key=Long.MAX_VALUE-keys[i];
+			int count=(counts==null ? 1 : counts[i]);
+			assert((key>=SketchObject.minHashValue)==(count>0));
+			increment(key, count);
+		}
+	}
+	
 	public StringBuilder toHeader(){
 		StringBuilder sb=new StringBuilder();
 		sb.append("#SZ:"+setOrMap.size());
@@ -154,7 +175,18 @@ public class SketchHeap {
 		int size=size();
 		if(size==0){return 0;}
 		long min=peek();
-		return Tools.min(genomeSizeKmers, SketchObject.genomeSizeEstimate(Long.MAX_VALUE-min, size));
+		long est=Tools.min(genomeSizeKmers, SketchObject.genomeSizeEstimate(Long.MAX_VALUE-min, size));
+//		assert(est<30000000) : min+", "+(Long.MAX_VALUE-min)+", "+size+", "+genomeSizeKmers+", "+Tools.min(genomeSizeKmers, SketchObject.genomeSizeEstimate(Long.MAX_VALUE-min, size));
+		return est;
+	}
+	
+	public long genomeSizeEstimate(int minCount) {
+		if(minCount<2){return genomeSizeEstimate();}
+		if(size()==0){return 0;}
+		long[] min=map.map.getMin(minCount);
+		if(min[1]==0){return 0;}
+		long est=Tools.min(genomeSizeKmers, SketchObject.genomeSizeEstimate(Long.MAX_VALUE-min[0], (int)min[1]));
+		return est;
 	}
 	
 	public long sketchSizeEstimate(){
@@ -201,6 +233,7 @@ public class SketchHeap {
 		else{set.set.clear();}
 	}
 	public boolean add(long key){return setOrMap.add(key);}
+	public int increment(long key, int incr){return setOrMap.increment(key, incr);}
 
 	private final LongHeapSet set;
 	private final LongHeapMap map;

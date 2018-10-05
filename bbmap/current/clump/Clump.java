@@ -643,9 +643,13 @@ public class Clump extends ArrayList<Read> implements Comparable<Clump> {
 		
 		final int cStart=0, rStart=maxLeft-pos, max=cbases.length;
 		for(int cloc=cStart, rloc=rStart; cloc<max; cloc++, rloc++){
+			//Called base, ref base
 			final byte cb=cbases[cloc], rb=rbases[rloc];
+			//Called quality, ref quality
 			final byte cq=(cquals==null ? 20 : cquals[cloc]), rq=rquals[rloc];
+			//Called number
 			final byte cx=AminoAcid.baseToNumber[cb];
+			//Ref number
 			final byte rx=AminoAcid.baseToNumber[rb];
 			
 //			assert((cb=='N') == (cquals[cloc]==0));
@@ -707,9 +711,12 @@ public class Clump extends ArrayList<Read> implements Comparable<Clump> {
 				if(q2==0 && AminoAcid.isFullyDefined(b)){
 					assert(!AminoAcid.isFullyDefined(cb));
 					q2=(byte)Tools.mid(2, 25, (rq+25)/2);
+				}else if(!AminoAcid.isFullyDefined(b)){
+					q2=0;
 				}
 				cquals[cloc]=q2;
-				assert((b=='N') == (cquals[cloc]==0)) : (char)b+", new="+cquals[cloc]+", q="+q+", old="+cq+", rq="+rq+", loc="+rloc+"\n"+call.toFastq()+"\n"+ref.toFastq();
+				assert((b=='N') == (cquals[cloc]==0)) : "b="+(char)b+", cb="+(char)cb+", rb="+(char)rb+", cx="+cx+", "
+						+ "new="+cquals[cloc]+", q="+q+", old="+cq+", rq="+rq+", loc="+rloc+"\n"+call.toFastq()+"\n"+ref.toFastq();
 			}
 		}
 		return corrections;

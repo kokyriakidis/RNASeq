@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import align2.AbstractIndex;
 import align2.AbstractMapper;
@@ -21,6 +21,7 @@ import fileIO.ChainBlock;
 import fileIO.ChainLine;
 import fileIO.ReadWrite;
 import fileIO.TextFile;
+import server.PercentEncoding;
 import shared.Primes;
 import shared.Shared;
 import shared.Tools;
@@ -1224,7 +1225,7 @@ public class Data {
 				if(vb){System.err.println("Considering getResource");}
 				URL url=Primes.class.getResource("/"+fname);
 				if(url!=null){
-					String temp=url.toString().replace("%20", " ");
+					String temp=PercentEncoding.codeToSymbol(url.toString());
 					if(vb){System.err.println("Found URL "+temp);}
 					f=new File(temp);
 					//						if(f.exists()){fname=temp;}
@@ -1327,42 +1328,7 @@ public class Data {
 	public static boolean GENEPOOL=(System.getenv().containsKey("NERSC_HOST") && System.getenv().get("NERSC_HOST").equalsIgnoreCase("genepool"));
 	public static boolean DENOVO=(System.getenv().containsKey("NERSC_HOST") && System.getenv().get("NERSC_HOST").equalsIgnoreCase("denovo"));
 	public static boolean CORI=(System.getenv().containsKey("NERSC_HOST") && System.getenv().get("NERSC_HOST").equalsIgnoreCase("cori"));
-	public static int LOGICAL_PROCESSORS=CALC_LOGICAL_PROCESSORS();
 	private static String HOSTNAME;
-	
-	private static int CALC_LOGICAL_PROCESSORS(){
-		final int procs=Tools.max(1, Runtime.getRuntime().availableProcessors());
-		int slots=procs;
-		Map<String,String> env=System.getenv();
-		String s=env.get("NSLOTS");//Genepool
-		boolean success=false;
-		if(s!=null){
-			int x=slots;
-			try {
-				x=Tools.max(1, Integer.parseInt(s));
-				success=true;
-			} catch (NumberFormatException e) {
-				//ignore
-			}
-			if(x<=16){slots=x;}
-		}
-		if(!success){
-			s=env.get("SLURM_CPUS_ON_NODE");//All SLURM systems
-			if(s!=null){
-				int x=slots;
-				try {
-					x=Tools.max(1, Integer.parseInt(s));
-					success=true;
-				} catch (NumberFormatException e) {
-					//ignore
-				}
-				slots=x;
-			}
-		}
-
-//		if(slots>8 && (slots*2==procs || (slots==16 && procs==40))){return procs;}//hyperthreading
-		return Tools.min(slots, procs);
-	}
 	
 	public static String HOSTNAME(){
 		if(HOSTNAME==null){
@@ -1401,8 +1367,10 @@ public class Data {
 	public static String ROOT_QUALITY;
 	
 	static{
-		ROOT=(new File(Data.class.getClassLoader().getResource(Data.class.getName().replace('.', '/') + ".class")
-				.getFile()).getAbsolutePath().replace('\\', '/').replace("dna/Data.class", "").replace("%20", " "));
+		String s=new File(Data.class.getClassLoader().getResource(
+				Data.class.getName().replace('.', '/') + ".class").getFile()).getAbsolutePath();
+		s=PercentEncoding.codeToSymbol(s);
+		ROOT=s.replace('\\', '/').replace("dna/Data.class", "");
 		setPath(WINDOWS ? "?windows" : "?unix");
 		if(!WINDOWS || true){setPath("?local");}
 	}
@@ -1473,10 +1441,10 @@ public class Data {
 		}
 	}
 	
-	private static final int INTERN_MAP_SIZE=(1<<20);
-	private static final int INTERN_MAP_LIMIT=(1<<19);
+	private static final int INTERN_MAP_SIZE=20011; //Do NOT look up in primes; causes an init ordering issue.
+	private static final int INTERN_MAP_LIMIT=(int)(INTERN_MAP_SIZE*0.75f);
 	
-	private static final HashMap<String, String> INTERNMAP=new HashMap<String, String>(INTERN_MAP_SIZE);
+	private static final ConcurrentHashMap<String, String> INTERNMAP=new ConcurrentHashMap<String, String>(INTERN_MAP_SIZE);
 //	public static final void unloadInternMap(){
 //		INTERNMAP=new HashMap<String, String>(INTERN_MAP_SIZE);
 //	}
@@ -1495,7 +1463,7 @@ public class Data {
 		for(int i=0; i<s.length; i++){s[i]=intern(s[i]);}
 	}
 	public static String intern(String s){
-		if(s==null || s.length()>25){return new String(s);}
+		if(s==null || s.length()>25){return s;}
 //		calls++;
 //
 //		if(s.length()>0 && s.charAt(0)!='?'){
@@ -1522,7 +1490,8 @@ public class Data {
 		return forceIntern(s);
 	}
 	
-	public static String forceIntern(String s){
+	public static String forceIntern(final String s0){
+		assert(s0!=null);
 		calls++;
 		
 //		if(s.length()<2){return s.intern();}
@@ -1532,20 +1501,16 @@ public class Data {
 //			if(s.length()<4){return s.intern();}
 //		}
 		
-		String old=INTERNMAP.get(s);
-		if(old!=null){return old;}
-		
-		synchronized(INTERNMAP){
-//			System.err.print(INTERNMAP.size()+"~"+calls+": "+s+", ");
-			if(INTERNMAP.size()>INTERN_MAP_LIMIT){
-				System.err.println("INTERNMAP overflow caused by "+s);
-				INTERNMAP.clear();
+		if(INTERNMAP.size()>INTERN_MAP_LIMIT){
+			synchronized(INTERNMAP){
+				if(INTERNMAP.size()>INTERN_MAP_LIMIT){
+					System.err.println("INTERNMAP overflow caused by "+s0);
+					INTERNMAP.clear();
+				}
 			}
-			if(INTERNMAP.containsKey(s)){return INTERNMAP.get(s);}
-			s=new String(s);
-			INTERNMAP.put(s, s);
 		}
-		return s;
+		String s=INTERNMAP.putIfAbsent(s0, s0);
+		return s==null ? s0 : s;
 	}
 	static int calls=0;
 	

@@ -102,6 +102,12 @@ public class ByteStreamWriter extends Thread {
 		}
 	}
 	
+	public static ByteStreamWriter makeBSW(FileFormat ff){
+		if(ff==null){return null;}
+		ByteStreamWriter bsw=new ByteStreamWriter(ff);
+		bsw.start();
+		return bsw;
+	}
 	
 	/*--------------------------------------------------------------*/
 	/*----------------        Primary Method        ----------------*/
@@ -262,6 +268,10 @@ public class ByteStreamWriter extends Thread {
 		}
 	}
 	
+	public final void forceFlushBuffer(){
+		flushBuffer(true);
+	}
+	
 	/** Called after every write to the buffer */
 	private final void flushBuffer(boolean force){
 		final int x=buffer.length();
@@ -310,6 +320,8 @@ public class ByteStreamWriter extends Thread {
 	}
 	
 	private synchronized void addOrdered(ByteBuilder job, long jobID){
+//		System.err.println("addOrdered "+jobID+"; nextJobID="+nextJobID);
+//		assert(false);
 		assert(ordered);
 		assert(job!=null) : jobID;
 		assert(jobID>=nextJobID) : jobID+", "+nextJobID;
@@ -342,7 +354,29 @@ public class ByteStreamWriter extends Thread {
 	/*--------------------------------------------------------------*/
 	/*----------------            Print             ----------------*/
 	/*--------------------------------------------------------------*/
+
+	/** 
+	 * Skip the  buffers and print directly.
+	 * Mainly for headers with ordered streams.
+	 * @param s String to print.
+	 */
+	public void forcePrint(String s){
+		forcePrint(s.getBytes());
+	}
 	
+	/** 
+	 * Skip the  buffers and print directly.
+	 * Mainly for headers with ordered streams.
+	 * @param b Data to print.
+	 */
+	public void forcePrint(byte[] b){
+		try {
+			outstream.write(b, 0, b.length);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 	
 	@Deprecated
 	/** Avoid using this if possible. */

@@ -121,7 +121,7 @@ public class ShrinkAccession {
 		while(line!=null){
 			if(Tools.startsWith(line, "accession\t")){
 				bb.append(line);
-				bb.append('\n');
+				bb.nl();
 			}else{
 				charsProcessed+=line.length+1;
 				linesProcessed++;
@@ -151,16 +151,16 @@ public class ShrinkAccession {
 						i++;
 						if(b=='\t'){break;}
 					}
-					bb.append('\n');
+					bb.nl();
 				}
 				
 //				String[] split=new String(line).split("\t");
 //				bb.append(split[0]);
-//				bb.append('\t');
-//				bb.append('\t');
+//				bb.tab();
+//				bb.tab();
 //				bb.append(split[2]);
-//				bb.append('\t');
-//				bb.append('\n');
+//				bb.tab();
+//				bb.nl();
 			}
 			if(bb.length()>8000){
 				bsw.print(bb);

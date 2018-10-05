@@ -520,17 +520,7 @@ public class SortByName {
 	}
 	
 	public void merge(ArrayList<String> inList, FileFormat ff1, FileFormat ff2){
-		final int oldBuffers=Shared.numBuffers();
-		final int oldBufferLen=Shared.bufferLen();
-		if(inList.size()>4){
-			outstream.println("Reduced buffer sizes prior to merging.");
-			Shared.capBufferLen(4);
-			Shared.capBuffers(1);
-		}
-		
-		errorState|=mergeAndDump(inList, /*null, */ff1, ff2, delete, useSharedHeader, outstream);
-		Shared.setBufferLen(oldBufferLen);
-		Shared.setBuffers(oldBuffers);
+		errorState|=mergeAndDump(inList, /*null, */ff1, ff2, delete, useSharedHeader, outstream, maxLengthObserved);
 	}
 	
 	private String getTempFile(){
@@ -553,17 +543,19 @@ public class SortByName {
 			outstream.println("Performing recursive merge to reduce open files.");
 			fnames=mergeRecursive(fnames);
 		}
-		return mergeAndDump(fnames, /*dumpCount,*/ ffout1, ffout2, delete, useHeader, outstream);
+		return mergeAndDump(fnames, /*dumpCount,*/ ffout1, ffout2, delete, useHeader, outstream, maxLengthObserved);
 	}
 	
-	public static boolean mergeAndDump(ArrayList<String> fnames, /*IntList dumpCount, */FileFormat ffout1, FileFormat ffout2, boolean delete, boolean useHeader, PrintStream outstream) {
+	public static boolean mergeAndDump(ArrayList<String> fnames, FileFormat ffout1, FileFormat ffout2, 
+			boolean delete, boolean useHeader, PrintStream outstream, long maxLengthObserved) {
 		
 		final int oldBuffers=Shared.numBuffers();
 		final int oldBufferLen=Shared.bufferLen();
 		
-		if(fnames.size()>4){
-			Shared.capBufferLen(8);
-			Shared.setBuffers(1);
+		if(fnames.size()>3 && (maxLengthObserved<1 || maxLengthObserved>100000)){
+			outstream.println("Reduced buffer sizes prior to merging.");
+			Shared.capBufferLen(4);
+			Shared.capBuffers(1);
 		}
 		
 		System.err.println("Merging "+fnames);
@@ -621,6 +613,8 @@ public class SortByName {
 			assert(!cc.cris().paired()) : FASTQ.TEST_INTERLEAVED+", "+FASTQ.FORCE_INTERLEAVED;
 		}
 		
+		long maxLen=0;
+		
 		final int limit=100000;
 		ArrayList<Read> buffer=new ArrayList<Read>(2*limit);
 		while(!q.isEmpty()){
@@ -660,6 +654,7 @@ public class SortByName {
 				Read r=buffer.get(index);
 				assert(peek==null || comparator.compare(peek, r)>0) : "\n"+peek+"\n"+r;
 				list.add(r);
+				maxLen=Tools.max(maxLen, r.length());
 			}
 			if(ros!=null){ros.add(list, 0);}
 			
@@ -672,6 +667,9 @@ public class SortByName {
 		}
 		
 		assert(buffer.isEmpty());
+		synchronized(SortByName.class){
+			maxLengthObservedStatic=Tools.max(maxLengthObservedStatic, maxLen);
+		}
 	}
 
 //
@@ -868,6 +866,7 @@ public class SortByName {
 	/*--------------------------------------------------------------*/
 
 	long maxLengthObserved=0;
+	static long maxLengthObservedStatic=0;
 	
 	/** Number of reads processed */
 	protected long readsProcessed=0;
@@ -888,7 +887,7 @@ public class SortByName {
 	private float memMult=0.35f;
 	
 	/** Max files to merge per pass */
-	private int maxFiles=16;
+	private int maxFiles=12;
 	
 	/*--------------------------------------------------------------*/
 	/*----------------         Final Fields         ----------------*/

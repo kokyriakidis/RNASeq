@@ -40,6 +40,12 @@ public final class IntList{
 		size=max(size, loc+1);
 	}
 	
+	public void subtractFrom(int value){
+		for(int i=0; i<size; i++){
+			array[i]=value-array[i];
+		}
+	}
+	
 	public final int get(int loc){
 		return(loc>=size ? 0 : array[loc]);//TODO: Shouldn't this crash instead of returning 0?
 	}

@@ -75,7 +75,7 @@ public class TaxNode implements Serializable{
 		if(amt==0){return countSum;}
 		if(verbose){System.err.println("incrementSum("+amt+") node: "+this);}
 		countSum+=amt;
-		assert(countSum>=0) : "Overflow! "+countSum+", "+amt;
+		assert(countSum>=0 || amt<0) : "Overflow! "+countSum+", "+amt;
 		return countSum;
 	}
 	

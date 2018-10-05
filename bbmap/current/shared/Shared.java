@@ -8,13 +8,15 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 import dna.Data;
 
 public class Shared {
-	
+
+	public static int LOGICAL_PROCESSORS=CALC_LOGICAL_PROCESSORS();
 	private static int THREADS=setThreads(-1);
 	
 	private static int READ_BUFFER_NUM_BUFFERS=setBuffers();
@@ -32,8 +34,9 @@ public class Shared {
 	public static final int MINGAP=GAPBUFFER2+GAPLEN;
 	public static final int GAPCOST=Tools.max(1, GAPLEN/64);
 	public static final byte GAPC='-';
-	
-	public static String BBMAP_VERSION_STRING="38.16";
+
+	public static String BBMAP_VERSION_STRING="38.26";
+	public static String BBMAP_VERSION_NAME="Helpful Hawk";
 	
 	public static boolean TRIM_READ_COMMENTS=false;
 	public static boolean TRIM_RNAME=false; //For mapped sam reads
@@ -49,7 +52,7 @@ public class Shared {
 	public static int FASTA_WRAP=70;
 	public static byte FAKE_QUAL=30;
 	
-	public static boolean FIX_EXTENSIONS=false;
+	public static boolean FIX_EXTENSIONS=true;
 	
 	/** True if assertions are enabled. */
 	private static boolean EA=false;
@@ -104,13 +107,15 @@ public class Shared {
 	/*--------------------------------------------------------------*/
 
 	public static int capThreads(int t) {
+		assert(THREADS>0) : THREADS;
 		final int old=THREADS;
 		THREADS=Tools.mid(1, t, old);
+		assert(THREADS>0) : THREADS;
 		return old;
 	}
 	
 	public static int setThreads(String x){
-		int y=Data.LOGICAL_PROCESSORS;
+		int y=LOGICAL_PROCESSORS;
 		if(x!=null && !x.equalsIgnoreCase("auto")){
 			y=Integer.parseInt(x);
 		}
@@ -121,15 +126,50 @@ public class Shared {
 		if(x>0){
 			THREADS=x;
 		}else{
-			THREADS=Tools.max(1, Data.LOGICAL_PROCESSORS);
+			THREADS=Tools.max(1, LOGICAL_PROCESSORS);
 		}
 		setBuffers();
+		assert(THREADS>0) : THREADS;
 		return THREADS;
 	}
 	
 	public static int threads(){
-		assert(THREADS>0);
+		assert(THREADS>0) : THREADS;
 		return THREADS;
+	}
+	
+	public static int CALC_LOGICAL_PROCESSORS(){
+		final int procs=Tools.max(1, Runtime.getRuntime().availableProcessors());
+		int slots=procs;
+		Map<String,String> env=System.getenv();
+		String s=env.get("NSLOTS");//Genepool
+		boolean success=false;
+		if(s!=null){
+			int x=slots;
+			try {
+				x=Tools.max(1, Integer.parseInt(s));
+				success=true;
+			} catch (NumberFormatException e) {
+				//ignore
+			}
+			if(x<=16){slots=x;}
+		}
+		if(!success){
+			s=env.get("SLURM_CPUS_ON_NODE");//All SLURM systems
+			if(s!=null){
+				int x=slots;
+				try {
+					x=Tools.max(1, Integer.parseInt(s));
+					success=true;
+				} catch (NumberFormatException e) {
+					//ignore
+				}
+				slots=x;
+			}
+		}
+
+//		if(slots>8 && (slots*2==procs || (slots==16 && procs==40))){return procs;}//hyperthreading
+		return Tools.min(slots, procs);
 	}
 	
 	/*--------------------------------------------------------------*/
@@ -264,7 +304,7 @@ public class Shared {
 		Random randy;
 		try {
 			randy=ThreadLocalRandom.current();
-		} catch (Exception e) {//In case the JVM does not support ThreadLocalRandom;
+		} catch (Throwable e) {//In case the JVM does not support ThreadLocalRandom;
 			randy=new Random();
 		}
 		return randy;

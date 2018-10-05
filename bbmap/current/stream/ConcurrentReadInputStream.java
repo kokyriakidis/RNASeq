@@ -146,7 +146,12 @@ public abstract class ConcurrentReadInputStream implements ConcurrentReadStreamI
 				ris2=(ff2==null ? null : qf2==null ? new FastaReadInputStream(ff2, false, Shared.AMINO_IN, -1) : new FastaQualReadInputStream(ff2, qf2));
 			}
 			cris=new ConcurrentGenericReadInputStream(ris1, ris2, maxReads);
-
+			
+//			cris.start();
+//			ListNum<Read> ln=cris.nextList();
+//			System.out.println(ln);
+//			
+//			assert(false) : ff1+", "+ff2;
 		}else if(ff1.scarf()){
 			
 			ReadInputStream ris1=new ScarfReadInputStream(ff1);

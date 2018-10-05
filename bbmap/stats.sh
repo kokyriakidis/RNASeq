@@ -3,7 +3,7 @@
 usage(){
 echo "
 Written by Brian Bushnell
-Last modified May 31, 2018
+Last modified August 6, 2018
 
 Description:  Generates basic assembly statistics such as scaffold count, 
 N50, L50, GC content, gap percent, etc.  For multiple files, please use
@@ -56,18 +56,21 @@ format=<0-7>    Format of the stats information; default 1.
 	format=5 is like 3 but with contig data only.
 	format=6 is like 3 but the header starts with a #.
 	format=7 is like 1 but only prints contig info.
+	format=8 is like 3 but in JSON.
 
-gcformat=<0-4>  Select GC output format; default 1.
+gcformat=<0-5>  Select GC output format; default 1.
 	gcformat=0:	(no base content info printed)
 	gcformat=1:	name	length	A	C	G	T	N	GC
 	gcformat=2:	name	GC
 	gcformat=4:	name	length	GC
+	gcformat=5:	name	length	GC	logsum	powsum
 	Note that in gcformat 1, A+C+G+T=1 even when N is nonzero.
 
 Please contact Brian Bushnell at bbushnell@lbl.gov if you encounter any problems.
 "
 }
 
+#This block allows symlinked shellscripts to correctly set classpath.
 pushd . > /dev/null
 DIR="${BASH_SOURCE[0]}"
 while [ -h "$DIR" ]; do

@@ -429,7 +429,7 @@ public class FASTQ {
 		bb.append('@');
 		if(id==null){bb.append(r.numericID);}
 		else{bb.append(id);}
-		bb.append('\n');
+		bb.nl();
 		
 //		if(bases!=null){for(byte b : bases){sb.append((char)b);}}
 //		sb.append('\n');
@@ -438,11 +438,11 @@ public class FASTQ {
 //		if(quals!=null){for(byte b : quals){sb.append((char)(b+ASCII_OFFSET_OUT));}}
 		
 		if(bases==null){
-			bb.append('\n').append('+').append('\n');
+			bb.nl().append('+').append('\n');
 			if(verbose){System.err.println("A:\n"+bb);}
 		}else{
 			bb.append(bases);
-			bb.append('\n').append('+').append('\n');
+			bb.nl().append('+').append('\n');
 			if(verbose){System.err.println("B:\n"+bb);}
 			if(quals==null){
 				final byte q=(byte)(Shared.FAKE_QUAL+ASCII_OFFSET_OUT);
