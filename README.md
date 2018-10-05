@@ -59,6 +59,8 @@ SRR1804793	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
 Rscript ARG_SCRIPT.R "Control" "SOX15" &> $PBS_JOBID.log 
 
+DO NOT chane export PATH=$DENOVOFS/groups/denovo/anaconda2/bin:$PATH. You can only change cd $PBS_O_WORKDIR
+
 ```
 
 #### 5) Run 1_Index.sh in cluster
