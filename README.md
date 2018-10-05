@@ -43,7 +43,7 @@ eg. Preproccesing/SRR1804790
     ......
 ```    
 
-#### 3) How to edit the metadata.txt file in the Metadata directory (MUST BE A TAB DELIMITED FILE)
+#### 3) How to edit the metadata.txt file in the Metadata directory (MUST BE A TAB DELIMITED FILE!)
 
 ```
 #Imagine that we have 2 samples for each of 2 conditions (untreated and treated):
