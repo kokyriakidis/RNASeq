@@ -65,71 +65,44 @@ SRR1804792	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804792/
 SRR1804793	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
 
-#### 4) Edit RNASeq_PrePro.sh script's PBS parameters to your needs
+#### 4) Edit 4_Sleuth.sh AND SPECIFY IN THE ARG_SCRIPT.R THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt's CONDITION COLUMN
 ```
-#!/bin/bash
-#PBS -N PrePro_R_${ERR}
-#PBS -q see
-#PBS -j oe
-#PBS -M email
-#PBS -m bea
-#PBS -l nodes=1:ppn=40,walltime=10:00:00
-```
-#### 5) Edit RNASeq_Kallisto.sh script's PBS parameters to your needs
-```
-#!/bin/bash
-#PBS -N RNASeq_Analysis
-#PBS -q see
-#PBS -j oe
-#PBS -M email
-#PBS -m bea
-#PBS -l nodes=1:ppn=40,walltime=10:00:00
-```
-#### 6) Edit RNASeq_Sleuth.sh script's PBS parameters to your needs AND SPECIFY IN THE diff_exp_sleuth FUNCTION THE 2 CONDITIONS, EXACTLY AS STATED IN THE metadata.txt's CONDITION COLUMN
-```
-#!/bin/bash
-#PBS -N RNASeq_Sleuth
-#PBS -q see
-#PBS -j oe
-#PBS -M email
-#PBS -m bea
-#PBS -l nodes=1:ppn=40,walltime=10:00:00
-
-diff_exp_sleuth <- function("condition1", "condition2") 
-
-# eg. diff_exp_sleuth <- function("untreated","treated") 
+Rscript ARG_SCRIPT.R "Control" "SOX15" &> $PBS_JOBID.log 
 
 ```
-#### 7) Run RNASeq_PrePro.sh in cluster FOR EACH sample_id
-```
-qsub -v ERR=sample_id RNASeq_PrePro.sh
 
-eg. qsub -v ERR=SRR1804790 RNASeq_PrePro.sh
-    qsub -v ERR=SRR1804791 RNASeq_PrePro.sh
-    qsub -v ERR=SRR1804792 RNASeq_PrePro.sh
-    qsub -v ERR=SRR1804793 RNASeq_PrePro.sh
-    .......
+#### 5) Run 1_Index.sh in cluster
+```
+qsub 1_Index.sh
+```
 
+#### 6) Run 2_PrePro.sh in cluster FOR EACH sample_id
 ```
-#### 8) Run RNASeq_Index.sh in cluster
-```
-qsub RNASeq_Index.sh
-```
-#### 9) Run RNASeq_Kallisto.sh in cluster FOR EACH sample_id
-```
-qsub -v ERR=sample_id RNASeq_Kallisto.sh
+qsub -v ERR=sample_id 2_PrePro.sh
 
-eg. qsub -v ERR=SRR1804790 RNASeq_Kallisto.sh
-    qsub -v ERR=SRR1804791 RNASeq_Kallisto.sh
-    qsub -v ERR=SRR1804792 RNASeq_Kallisto.sh
-    qsub -v ERR=SRR1804793 RNASeq_Kallisto.sh
+eg. qsub -v ERR=SRR1804790 2_PrePro.sh
+    qsub -v ERR=SRR1804791 2_PrePro.sh
+    qsub -v ERR=SRR1804792 2_PrePro.sh
+    qsub -v ERR=SRR1804793 2_PrePro.sh
     .......
 
 ```
 
-#### 10) Run RNASeq_Sleuth.sh
+#### 7) Run 3_Kallisto.sh in cluster FOR EACH sample_id
 ```
-qsub RNASeq_Sleuth.sh
+qsub -v ERR=sample_id 3_Kallisto.sh
+
+eg. qsub -v ERR=SRR1804790 3_Kallisto.sh
+    qsub -v ERR=SRR1804791 3_Kallisto.sh
+    qsub -v ERR=SRR1804792 3_Kallisto.sh
+    qsub -v ERR=SRR1804793 3_Kallisto.sh
+    .......
 
 ```
-#### 11) The analysis' results will be inside the Analysis directory 
+
+#### 8) Run 4_Sleuth.sh
+```
+qsub 4_Sleuth.sh
+
+```
+#### 9) The analysis' results will be inside the Analysis directory 
