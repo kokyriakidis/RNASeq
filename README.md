@@ -59,7 +59,7 @@ SRR1804793	treated /mnt/scratchdir/home/kyriakidk/Preproccesing/SRR1804793/
 ```
 Rscript ARG_SCRIPT.R "Control" "SOX15" &> $PBS_JOBID.log 
 
-DO NOT change export PATH=$DENOVOFS/groups/denovo/anaconda2/bin:$PATH. You can only change cd $PBS_O_WORKDIR
+DO NOT change "export PATH=$DENOVOFS/groups/denovo/anaconda2/bin:$PATH". You can ONLY change "cd $PBS_O_WORKDIR"
 
 ```
 
