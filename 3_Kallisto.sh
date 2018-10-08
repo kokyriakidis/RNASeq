@@ -9,6 +9,6 @@
 cd $PBS_O_WORKDIR
 
 ##Quantification
-./kallisto/kallisto quant -i ./Resources/hg38_index.idx -o ./Preproccesing/${ERR}/ -b 100 ./Preproccesing/${ERR}/${ERR}_1_qt.fastq.gz ./Preproccesing/${ERR}/${ERR}_2_qt.fastq.gz
+./kallisto/kallisto quant -t $PBS_NP -i ./Resources/hg38_index.idx -o ./Preproccesing/${ERR}/ -b 100 ./Preproccesing/${ERR}/${ERR}_1_qt.fastq.gz ./Preproccesing/${ERR}/${ERR}_2_qt.fastq.gz
 
 #FOR SINGLE-END READS: --single -l 180 -s 20 reads_1.fastq.gz
